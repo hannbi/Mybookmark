@@ -4,13 +4,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import BookSearchSection from "@/components/BookSearchSection";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import RandomQuoteCard from "@/components/RandomQuoteCard";
 
 type FeedReview = {
@@ -39,17 +33,17 @@ type GenreStat = {
 };
 
 const GENRE_COLORS = [
-  "#60a5fa", // 파랑
-  "#34d399", // 초록
-  "#f97316", // 주황
-  "#a855f7", // 보라
-  "#facc15", // 노랑
-  "#f97373", // 빨강
-  "#14b8a6", // 청록
-  "#fb7185", // 핑크
+  "#60a5fa",
+  "#34d399",
+  "#f97316",
+  "#a855f7",
+  "#facc15",
+  "#f97373",
+  "#14b8a6",
+  "#fb7185",
 ];
 
-// 장르 라벨 줄이기: 마지막 구간만 + 길면 … 처리
+// 장르 라벨 줄이기
 function formatGenreLabel(raw: string | null | undefined) {
   if (!raw) return "기타";
   const parts = raw.split(">");
@@ -114,7 +108,6 @@ export default function HomePage() {
         const json = await res.json();
 
         if (res.status === 401) {
-          // 미로그인 상태 (지금은 전체 통계지만, 에러 메시지는 유지)
           setGenreError("로그인하면 이번 달 나의 장르 통계를 볼 수 있습니다.");
           setGenreStats([]);
           setGenreTotal(0);
@@ -145,7 +138,7 @@ export default function HomePage() {
     loadGenres();
   }, []);
 
-  // 파이 차트에 쓸 "상위 5개 장르, count 내림차순"
+  // 상위 5개 장르
   const topGenres = [...genreStats]
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
@@ -164,9 +157,6 @@ export default function HomePage() {
       <section className="space-y-3">
         <div className="flex items-center justify_between">
           <h2 className="text-xl font-semibold">최근 리뷰</h2>
-          {/* <Link href="/reviews" className="text-xs text-zinc-500 hover:underline">
-            리뷰 더보기
-          </Link> */}
         </div>
 
         {loadingFeed && (
@@ -223,7 +213,7 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* 공감 많은 리뷰 섹션 */}
+        {/* 공감 많은 리뷰 */}
         <div className="space-y-2">
           <h3 className="text-sm font-semibold">공감 많은 리뷰</h3>
           {topLiked.length === 0 && (
@@ -256,8 +246,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* 장르 트렌드 + 활동 랭킹 */}
       <section className="grid.grid-cols-1 gap-4 md:grid-cols-2">
-        {/* 이달의 장르 트렌드 (파이 차트) */}
+        {/* 이달의 장르 트렌드 */}
         <div className="rounded-lg border bg-white p-4 text-sm">
           <h3 className="text-base font-semibold mb-2">이달의 장르 트렌드</h3>
 
@@ -271,7 +262,8 @@ export default function HomePage() {
 
           {!genreLoading && !genreError && genreStats.length === 0 && (
             <p className="text-xs text-zinc-500">
-              이번 달에 완독된 책이 아직 없거나, 통계에 포함될 데이터가 없습니다.
+              이번 달에 완독된 책이 아직 없거나, 통계에 포함될 데이터가
+              없습니다.
             </p>
           )}
 
@@ -318,7 +310,7 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* 활동 랭킹 카드 (기존 그대로) */}
+        {/* 활동 랭킹 카드 */}
         <div className="rounded-lg border bg-white p-4 text-sm">
           <h3 className="text-base font-semibold mb-2">활동 랭킹</h3>
           <p className="text-xs text-zinc-500">

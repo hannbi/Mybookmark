@@ -2,86 +2,55 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-// 좋아요 / 좋아요 취소 토글
 export async function POST(req: NextRequest) {
     try {
-        // 1) 쿠키 기반 서버용 Supabase 클라이언트
         const supabase = await createSupabaseServerClient();
 
-        // 2) 로그인 사용자 확인
         const {
             data: { user },
-            error: authError,
+            error: userError,
         } = await supabase.auth.getUser();
 
-        if (authError) {
-            console.error("supabase.auth.getUser error:", authError);
+        if (userError) {
+            console.error("quote-likes getUser error:", userError);
+            return NextResponse.json(
+                { error: "인증 정보를 가져오지 못했습니다." },
+                { status: 500 }
+            );
         }
 
         if (!user) {
             return NextResponse.json(
-                { error: "Not authenticated" },
+                { error: "로그인이 필요합니다." },
                 { status: 401 }
             );
         }
 
-        // 3) body 에서 quote_id 꺼내기
         const body = await req.json().catch(() => null);
 
-        let quote_id: number | null = null;
+        // 프론트에서 오는 이름을 모두 수용
+        const rawId = body?.quote_id ?? body?.quoteId ?? body?.id;
+        const quoteId = rawId ? Number(rawId) : null;
 
-        // body 에서 먼저 찾기 (quote_id, quoteId 둘 다 허용)
-        if (body) {
-            const raw =
-                (body.quote_id as number | string | undefined) ??
-                (body.quoteId as number | string | undefined);
-
-            if (raw !== undefined && raw !== null) {
-                const n = Number(raw);
-                if (!Number.isNaN(n)) {
-                    quote_id = n;
-                }
-            }
-        }
-
-        // 그래도 없으면 쿼리스트링에서 한 번 더 시도 (?quote_id= / ?quoteId=)
-        if (quote_id === null) {
-            const sp = new URL(req.url).searchParams;
-            const raw =
-                sp.get("quote_id") ??
-                sp.get("quoteId");
-
-            if (raw !== null) {
-                const n = Number(raw);
-                if (!Number.isNaN(n)) {
-                    quote_id = n;
-                }
-            }
-        }
-
-        if (quote_id === null) {
+        if (!quoteId || Number.isNaN(quoteId)) {
             return NextResponse.json(
                 { error: "quote_id missing" },
                 { status: 400 }
             );
         }
 
-
-        // 4) 내가 이미 이 인용문에 좋아요 했는지 확인
-        const {
-            data: existing,
-            error: existingError,
-        } = await supabase
+        // 이미 내가 공감했는지 확인
+        const { data: existing, error: existingError } = await supabase
             .from("quote_likes")
             .select("id")
-            .eq("quote_id", quote_id)
             .eq("user_id", user.id)
+            .eq("quote_id", quoteId)
             .maybeSingle();
 
         if (existingError) {
-            console.error("select from quote_likes error:", existingError);
+            console.error("quote_likes select error:", existingError);
             return NextResponse.json(
-                { error: "failed to check like" },
+                { error: "공감 상태 조회 중 오류가 발생했습니다." },
                 { status: 500 }
             );
         }
@@ -89,71 +58,64 @@ export async function POST(req: NextRequest) {
         let liked: boolean;
 
         if (existing) {
-            // 5-a) 이미 좋아요 한 상태 → 좋아요 취소
-            const { error: deleteError } = await supabase
+            // 공감 취소
+            const { error: delError } = await supabase
                 .from("quote_likes")
                 .delete()
                 .eq("id", existing.id);
 
-            if (deleteError) {
-                console.error("delete from quote_likes error:", deleteError);
+            if (delError) {
+                console.error("quote_likes delete error:", delError);
                 return NextResponse.json(
-                    { error: "failed to unlike" },
+                    { error: "공감 해제 중 오류가 발생했습니다." },
                     { status: 500 }
                 );
             }
-
             liked = false;
         } else {
-            // 5-b) 아직 좋아요 안 한 상태 → 좋아요 추가
-            const { error: insertError } = await supabase
+            // 새 공감 추가
+            const { error: insError } = await supabase
                 .from("quote_likes")
-                .insert({
-                    user_id: user.id,
-                    quote_id,
-                });
+                .insert({ user_id: user.id, quote_id: quoteId });
 
-            if (insertError) {
-                console.error("insert into quote_likes error:", insertError);
+            if (insError) {
+                console.error("quote_likes insert error:", insError);
                 return NextResponse.json(
-                    { error: "failed to like" },
+                    { error: "공감 추가 중 오류가 발생했습니다." },
                     { status: 500 }
                 );
             }
-
             liked = true;
         }
 
-        // 6) 현재 좋아요 개수 다시 세어서 quotes.likes_count 갱신
-        const {
-            count,
-            error: countError,
-        } = await supabase
+        // 최신 공감 수 계산 (quote_likes 기준)
+        const { count, error: countError } = await supabase
             .from("quote_likes")
             .select("*", { count: "exact", head: true })
-            .eq("quote_id", quote_id);
+            .eq("quote_id", quoteId);
 
         if (countError) {
-            console.error("count quote_likes error:", countError);
-            // count 실패해도 좋아요 토글 자체는 성공했으니 liked 정보만 보내줌
-            return NextResponse.json({ liked });
+            console.error("quote_likes count error:", countError);
+            return NextResponse.json(
+                { error: "공감 수 계산 중 오류가 발생했습니다." },
+                { status: 500 }
+            );
         }
 
         const likesCount = count ?? 0;
 
-        const { error: updateError } = await supabase
-            .from("quotes")
-            .update({ likes_count: likesCount })
-            .eq("id", quote_id);
-
-        if (updateError) {
-            console.error("update quotes.likes_count error:", updateError);
-            // 그래도 좋아요 토글은 성공한 상태
-        }
-
-        return NextResponse.json({ liked });
+        // 다양한 프론트 코드와 호환되도록 여러 필드 이름으로 응답
+        return NextResponse.json({
+            liked,                 // boolean
+            liked_by_me: liked,    // boolean (snake_case)
+            likesCount,            // camelCase
+            likes_count: likesCount, // snake_case
+        });
     } catch (e) {
-        console.error("POST /api/quote-likes error:", e);
-        return NextResponse.json({ error: "Server error" }, { status: 500 });
+        console.error("quote-likes POST unexpected error:", e);
+        return NextResponse.json(
+            { error: "알 수 없는 오류가 발생했습니다." },
+            { status: 500 }
+        );
     }
 }

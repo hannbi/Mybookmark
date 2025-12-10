@@ -55,9 +55,50 @@ export default function RandomQuoteCard() {
         loadRandomQuote();
     }, []);
 
+    // 공감 클릭
+    async function handleLikeClick() {
+        if (!quote) return;
+
+        try {
+            const res = await fetch("/api/quote-likes", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ quote_id: quote.id }),
+            });
+
+            const json = await res.json().catch(() => null);
+
+            if (!res.ok || !json) {
+                alert(json?.error || "공감 처리 중 오류가 발생했습니다.");
+                return;
+            }
+
+            const liked = !!json.liked;
+            const serverLikes =
+                typeof json.likes_count === "number" ? json.likes_count : null;
+
+            setQuote((prev) =>
+                prev
+                    ? {
+                        ...prev,
+                        likes_count:
+                            serverLikes !== null
+                                ? serverLikes
+                                : Math.max(0, prev.likes_count + (liked ? 1 : -1)),
+                    }
+                    : prev
+            );
+        } catch (e) {
+            console.error("POST /api/quote-likes error:", e);
+            alert("공감 처리 중 오류가 발생했습니다.");
+        }
+    }
+
     if (loading) {
         return (
-            <div className="rounded-lg border bg-white p-4 text-sm">
+            <div className="rounded-lg border.bg-white p-4 text-sm">
                 <p className="text-xs text-zinc-500">
                     인상 깊은 문장을 불러오는 중...
                 </p>
@@ -105,43 +146,17 @@ export default function RandomQuoteCard() {
                         {quote.profiles?.nickname ?? "익명"}
                         {quote.page && ` · p.${quote.page}`}
                     </span>
+
                     <button
-                        onClick={async () => {
-                            // API 호출
-                            const res = await fetch("/api/quote-likes", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify({ quote_id: quote.id }), // ★ 여기!
-                            });
-
-                            const json = await res.json().catch(() => null);
-
-                            if (res.ok && json) {
-                                // liked: true/false 에 따라 개수 토글
-                                setQuote((prev) =>
-                                    prev
-                                        ? {
-                                            ...prev,
-                                            likes_count: json.liked
-                                                ? prev.likes_count + 1
-                                                : prev.likes_count - 1,
-                                        }
-                                        : prev
-                                );
-                            } else {
-                                alert(json?.error || "공감 처리 중 오류가 발생했습니다.");
-                            }
-                        }}
-                        className="flex items-center gap-1 text-xs text-orange-600 hover:underline"
+                        type="button"
+                        onClick={handleLikeClick}
+                        className="mt-1 flex items-center.gap-1 text-xs text-orange-600 hover:underline"
                     >
                         <span>공감</span>
                         <span>{quote.likes_count}</span>
                     </button>
-
-
                 </div>
+
                 {book?.cover && (
                     <div className="h-16 w-12 overflow-hidden rounded bg-zinc-100">
                         <img

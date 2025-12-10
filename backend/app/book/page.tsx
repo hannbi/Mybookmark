@@ -34,6 +34,20 @@ type Review = {
   likedByMe?: boolean;
 };
 
+// 인용문 타입 (Quote 전용)
+type BookQuote = {
+  id: number;
+  book_id: number;
+  content: string;
+  page: number | null;
+  likes_count: number;
+  liked_by_me: boolean; // ← 서버에서 내려주는 내 공감 여부
+  created_at: string;
+  profiles?: {
+    nickname: string | null;
+  } | null;
+};
+
 function statusLabel(status?: string | null) {
   if (!status) return "미지정";
   if (status === "want") return "읽고 싶어요";
@@ -352,7 +366,9 @@ export default function BookPage() {
         }
 
         setReviews((prev) =>
-          prev.map((r) => (r.id === editingReviewId ? (json.review as Review) : r))
+          prev.map((r) =>
+            r.id === editingReviewId ? (json.review as Review) : r
+          )
         );
       }
 
@@ -401,6 +417,7 @@ export default function BookPage() {
     }
   }
 
+  // 리뷰 공감 처리 (Quote와는 별개)
   async function handleToggleLike(review: Review) {
     if (!user) {
       alert("로그인 후 공감할 수 있습니다.");
@@ -518,9 +535,9 @@ export default function BookPage() {
 
                   <span className="text-xs text-zinc-500">
                     {libraryInfo.started_at &&
-                      `시작: ${libraryInfo.started_at} `}
+                      `시작: {libraryInfo.started_at} `}
                     {libraryInfo.finished_at &&
-                      `완료: ${libraryInfo.finished_at}`}
+                      `완료: {libraryInfo.finished_at}`}
                   </span>
                 </div>
 
@@ -646,11 +663,13 @@ export default function BookPage() {
                         )}
                       </div>
                       <div className="text-[11px] text-zinc-400">
-                        {new Date(r.created_at).toISOString().slice(0, 10)}
+                        {new Date(r.created_at)
+                          .toISOString()
+                          .slice(0, 10)}
                       </div>
                     </div>
 
-                    <p className="whitespace-pre-wrap leading-relaxed mb-2">
+                    <p className="whitespace-pre-wrap.leading-relaxed mb-2">
                       {r.content}
                     </p>
 
@@ -701,7 +720,7 @@ export default function BookPage() {
             </div>
           </section>
 
-          {/* 책 속 한 구절 섹션 */}
+          {/* 책 속 한 구절(Quote) 섹션 – Quote 전용 컴포넌트 사용 */}
           <BookQuotesSection bookId={Number(bookId)} />
         </>
       )}
