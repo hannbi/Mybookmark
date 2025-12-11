@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSupabaseUser } from "@/lib/hooks/useSupabaseUser";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type LibraryItem = {
   book_id: number;
@@ -34,6 +35,7 @@ function statusLabel(status?: string | null) {
 export default function DashboardPage() {
   const router = useRouter();
   const { user, loading } = useSupabaseUser();
+  const [displayName, setDisplayName] = useState<string | null>(null);
 
   const [items, setItems] = useState<LibraryItem[]>([]);
   const [loadingList, setLoadingList] = useState(false);
@@ -43,6 +45,26 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/auth/login");
+    }
+    if (user) {
+      const supabase = createSupabaseBrowserClient();
+      supabase
+        .from("profiles")
+        .select("nickname")
+        .eq("id", user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.nickname) {
+            setDisplayName(data.nickname);
+          } else {
+            const meta =
+              (user.user_metadata as any)?.nickname ||
+              (user.user_metadata as any)?.full_name ||
+              user.email;
+            setDisplayName(meta);
+          }
+        })
+        .catch(() => setDisplayName(user.email));
     }
   }, [loading, user, router]);
 
@@ -175,7 +197,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold">독서 대시보드</h1>
           <p className="text-sm text-zinc-600 mt-1">
-            {user?.email} 님의 독서 활동 요약입니다.
+            {(displayName ?? user?.email) ?? ""} 님의 독서 활동 요약입니다.
           </p>
         </div>
         <div className="flex gap-2 text-xs">

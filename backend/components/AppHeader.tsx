@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSupabaseUser } from "@/lib/hooks/useSupabaseUser";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -23,11 +23,6 @@ const navItems: NavItem[] = [
     href: "/mylibrary",
     label: "My Library",
     isActive: (pathname) => pathname.startsWith("/mylibrary"),
-  },
-  {
-    href: "/community",
-    label: "커뮤니티",
-    isActive: (pathname) => pathname.startsWith("/community"),
   },
 ];
 
@@ -52,6 +47,36 @@ export default function AppHeader() {
   const router = useRouter();
   const { user } = useSupabaseUser();
   const [signingOut, setSigningOut] = useState(false);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+
+  // 닉네임 불러오기 (profiles.nickname 우선)
+  // 닉네임 불러오기 (profiles.nickname 우선)
+  useEffect(() => {
+    if (!user) {
+      setDisplayName(null);
+      return;
+    }
+    const supabase = createSupabaseBrowserClient();
+    supabase
+      .from("profiles")
+      .select("nickname")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.nickname) {
+          setDisplayName(data.nickname);
+        } else {
+          const metaName =
+            (user.user_metadata as any)?.nickname ||
+            (user.user_metadata as any)?.full_name ||
+            user.email;
+          setDisplayName(metaName);
+        }
+      })
+      .catch(() => {
+        setDisplayName(user.email);
+      });
+  }, [user]);
 
   async function handleLogout() {
     try {
@@ -84,7 +109,7 @@ export default function AppHeader() {
           {user ? (
             <>
               <span className="hidden sm:inline text-zinc-600 max-w-[160px] truncate">
-                {user.email}
+                {displayName ?? user.email}
               </span>
               <button
                 type="button"

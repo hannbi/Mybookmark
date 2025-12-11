@@ -2,10 +2,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// 알라딘 검색 후 DB upsert가 필요하므로 서비스 롤 키 사용 (클라이언트에 노출되지 않는 서버 라우트)
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY ?? "");
 
 // 제목 정규화: 공백 제거 + 소문자
 function normalizeTitle(title: string | null | undefined): string {
@@ -15,6 +16,13 @@ function normalizeTitle(title: string | null | undefined): string {
 
 // GET /api/books/search?q=키워드
 export async function GET(req: NextRequest) {
+  if (!SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json(
+      { error: "SUPABASE_SERVICE_ROLE_KEY가 설정되어 있지 않습니다." },
+      { status: 500 }
+    );
+  }
+
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") ?? "").trim();
 
@@ -26,7 +34,14 @@ export async function GET(req: NextRequest) {
   const { data: existing, error: existingError } = await supabase
     .from("books")
     .select("id, title, author, publisher, category, isbn, cover")
-    .ilike("title", `%${q}%`)
+    .or(
+      [
+        `title.ilike.%${q}%`,
+        `author.ilike.%${q}%`,
+        `publisher.ilike.%${q}%`,
+        `category.ilike.%${q}%`,
+      ].join(",")
+    )
     .limit(50);
 
   if (existingError) {
@@ -44,7 +59,7 @@ export async function GET(req: NextRequest) {
       new URLSearchParams({
         ttbkey: process.env.ALADIN_TTB_KEY!, // .env 에 있어야 함
         Query: q,
-        QueryType: "Title", // 제목 기준 검색
+        QueryType: "Keyword", // 제목/저자/키워드 검색
         MaxResults: "20",
         SearchTarget: "Book",
         output: "js", // JSON
@@ -179,7 +194,14 @@ export async function GET(req: NextRequest) {
     const { data: finalData, error: finalError } = await supabase
       .from("books")
       .select("id, title, author, publisher, category, isbn, cover")
-      .ilike("title", `%${q}%`)
+      .or(
+        [
+          `title.ilike.%${q}%`,
+          `author.ilike.%${q}%`,
+          `publisher.ilike.%${q}%`,
+          `category.ilike.%${q}%`,
+        ].join(",")
+      )
       .limit(50);
 
     if (finalError) {

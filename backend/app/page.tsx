@@ -6,6 +6,9 @@ import Link from "next/link";
 import BookSearchSection from "@/components/BookSearchSection";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import RandomQuoteCard from "@/components/RandomQuoteCard";
+import WeeklyBestsellers from "@/components/WeeklyBestsellers";
+import { useSupabaseUser } from "@/lib/hooks/useSupabaseUser";
+import NewArrivals from "@/components/NewArrivals";
 
 type FeedReview = {
   id: number;
@@ -33,14 +36,12 @@ type GenreStat = {
 };
 
 const GENRE_COLORS = [
-  "#60a5fa",
-  "#34d399",
-  "#f97316",
-  "#a855f7",
-  "#facc15",
-  "#f97373",
-  "#14b8a6",
-  "#fb7185",
+  "#d45c1f",
+  "#e1772d",
+  "#e89456",
+  "#f0b98a",
+  "#f7d8c2",
+  "#f9e8dc",
 ];
 
 // 장르 라벨 줄이기
@@ -64,6 +65,8 @@ export default function HomePage() {
   const [genreTotal, setGenreTotal] = useState(0);
   const [genreLoading, setGenreLoading] = useState(false);
   const [genreError, setGenreError] = useState<string | null>(null);
+
+  const { user } = useSupabaseUser();
 
   // 리뷰 피드 로딩
   useEffect(() => {
@@ -143,15 +146,27 @@ export default function HomePage() {
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 
+  // 공감 많은 리뷰 캐러셀 상태
+  const [slideIndex, setSlideIndex] = useState(0);
+
+  // 자동 슬라이드
+  useEffect(() => {
+    if (topLiked.length <= 1) return;
+    const timer = setInterval(() => {
+      setSlideIndex((prev) => (prev + 1) % topLiked.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [topLiked.length]);
+
   return (
     <main className="p-6 space-y-8">
-      {/* 베스트셀러 & 도서 검색 */}
+      {/* 도서 검색 */}
       <section>
-        <h2 className="text-xl font-semibold mb-3">
-          베스트셀러 & 도서 검색
-        </h2>
         <BookSearchSection />
       </section>
+
+      {/* 이번 주 베스트셀러 */}
+      <WeeklyBestsellers />
 
       {/* 최근 리뷰 */}
       <section className="space-y-3">
@@ -215,42 +230,152 @@ export default function HomePage() {
 
         {/* 공감 많은 리뷰 */}
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold">공감 많은 리뷰</h3>
+          <div className="flex items-baseline gap-3">
+            <h3 className="text-sm font-semibold">공감 많은 리뷰</h3>
+            <p className="text-[11px] text-zinc-500">
+              독자들이 가장 공감한 리뷰를 모았어요.
+            </p>
+          </div>
           {topLiked.length === 0 && (
             <p className="text-[11px] text-zinc-500">
               아직 공감이 눌린 리뷰가 없습니다.
             </p>
           )}
-          <div className="grid gap-3 md:grid-cols-2">
-            {topLiked.map((r) => (
-              <Link
-                key={`top-${r.id}`}
-                href={`/book?bookId=${r.books.id}`}
-                className="flex gap-3 rounded-md border bg_white p-3 text-xs hover:bg-zinc-50"
-              >
-                <div className="flex flex-col gap-1">
-                  <div className="font-semibold line-clamp-2">
-                    {r.books.title}
-                  </div>
-                  <div className="text-[11px] text-zinc-600">
-                    {r.profiles?.nickname ?? "익명"} · 공감{" "}
-                    {r.likes_count ?? 0}
-                  </div>
-                  <p className="text-[11px] text-zinc-700 line-clamp-2">
-                    {r.content}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
+
+          {topLiked.length > 0 && (
+            <div className="relative overflow-hidden rounded-md border bg-white p-3">
+              <div className="relative h-[300px] overflow-hidden">
+                {[-1, 0, 1].map((offset) => {
+                  const idx =
+                    (slideIndex + offset + topLiked.length) % topLiked.length;
+                  const r = topLiked[idx];
+                  const isActive = offset === 0;
+                  const opacity = isActive ? 1 : 0.7;
+                  const scale = isActive ? 1 : 0.92;
+                  const translateX = offset * 115; // 좌우 위치
+
+                  return (
+                    <div
+                      key={`top-${r.id}-pos-${offset}`}
+                      className="absolute left-1/2 top-1/2 w-[340px] sm:w-[380px] lg:w-[420px] h-[250px]"
+                      style={{
+                        opacity,
+                        transform: `translate(-50%, -50%) translateX(${translateX}%) scale(${scale})`,
+                        transition: "transform 500ms ease, opacity 500ms ease",
+                        transformOrigin: "center center",
+                      }}
+                    >
+                      <div className="flex h-full items-stretch gap-3 rounded-lg border bg-white p-3 shadow-sm">
+                        {r.books.cover && (
+                          <div className="w-40 flex-shrink-0 overflow-hidden rounded-md bg-zinc-100 h-full">
+                            <img
+                              src={r.books.cover}
+                              alt={r.books.title}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        )}
+                        <div className="flex min-h-[150px] flex-1 flex-col justify-between">
+                          <div className="flex flex-col gap-1 text-sm">
+                            <div className="font-semibold line-clamp-2">
+                              {r.books.title}
+                            </div>
+                            <div className="text-[11px] text-zinc-600">
+                              {(r.books.author ?? "").split(/[,(]/)[0]?.trim()}
+                            </div>
+                            <div className="mt-1 space-y-1 border-l border-zinc-400 pl-3">
+                              <p className="text-[12px] text-zinc-700 line-clamp-3 leading-relaxed">
+                                {`“${r.content}”`}
+                              </p>
+                              <div className="flex items-center gap-3 text-[11px] text-zinc-500">
+                                <span>
+                                  {new Date(r.created_at)
+                                    .toISOString()
+                                    .slice(0, 10)}
+                                </span>
+                                <span>{r.profiles?.nickname ?? "익명"}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-[11px] text-amber-600">
+                                <span>공감</span>
+                                <span>{r.likes_count ?? 0}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
+                            <Link
+                              href={`/book?bookId=${r.books.id}`}
+                              className="rounded border border-amber-500 px-2 py-1 text-amber-600 hover:bg-amber-50"
+                            >
+                              리뷰 더보기
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (!user) {
+                                  alert("로그인 후 사용할 수 있습니다.");
+                                  return;
+                                }
+                                try {
+                                  await fetch("/api/user-books", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                      bookId: r.books.id,
+                                      status: "want",
+                                    }),
+                                  });
+                                  alert("읽고 싶은 책으로 추가했습니다.");
+                                } catch (e) {
+                                  alert("추가 중 오류가 발생했습니다.");
+                                }
+                              }}
+                              className="rounded border border-emerald-600 px-2 py-1 text-emerald-700 hover:bg-emerald-50"
+                            >
+                              읽고 싶은 책
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* 인디케이터 */}
+              <div className="mt-3 flex items-center justify-center gap-2">
+                {topLiked.map((_, idx) => (
+                  <button
+                    key={`dot-${idx}`}
+                    onClick={() => setSlideIndex(idx)}
+                    className={`h-2.5 w-2.5 rounded-full transition ${
+                      slideIndex === idx
+                        ? "bg-amber-500"
+                        : "bg-zinc-300 hover:bg-zinc-400"
+                    }`}
+                    aria-label={`리뷰 ${idx + 1}번 보기`}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
       {/* 장르 트렌드 + 활동 랭킹 */}
-      <section className="grid.grid-cols-1 gap-4 md:grid-cols-2">
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* 이달의 장르 트렌드 */}
-        <div className="rounded-lg border bg-white p-4 text-sm">
-          <h3 className="text-base font-semibold mb-2">이달의 장르 트렌드</h3>
+        <div className="rounded-2xl border bg-white p-5 shadow-sm text-sm">
+          <div className="mb-3 space-y-1">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <span role="img" aria-label="books">
+                📚
+              </span>
+              이달의 장르 트렌드
+            </h3>
+            <p className="text-xs text-zinc-500">
+              이번 달 독자들이 선택한 장르 비율을 보여줘요.
+            </p>
+          </div>
 
           {genreLoading && (
             <p className="text-xs text-zinc-500">장르 통계를 불러오는 중...</p>
@@ -268,12 +393,8 @@ export default function HomePage() {
           )}
 
           {!genreLoading && !genreError && topGenres.length > 0 && (
-            <div className="mt-2 space-y-2">
-              <p className="text-[11px] text-zinc-500">
-                이번 달 전체 사용자 완독 {genreTotal}권 기준 상위 5개 장르입니다.
-              </p>
-
-              <div className="h-56 w-full">
+            <div className="mt-3 grid gap-4 lg:grid-cols-[1.2fr_1fr] items-center">
+              <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -282,13 +403,11 @@ export default function HomePage() {
                       nameKey="category"
                       cx="50%"
                       cy="50%"
-                      outerRadius="50%"
-                      labelLine={false}
-                      label={(entry: any) => {
-                        const name = formatGenreLabel(entry?.payload?.category);
-                        const count = entry?.payload?.count ?? 0;
-                        return `${name}: ${count}권`;
-                      }}
+                      outerRadius="60%"
+                      stroke="#f8f7f5"
+                      strokeWidth={2}
+                      startAngle={90}
+                      endAngle={-270}
                     >
                       {topGenres.map((entry, index) => (
                         <Cell
@@ -305,6 +424,31 @@ export default function HomePage() {
                     />
                   </PieChart>
                 </ResponsiveContainer>
+              </div>
+
+              <div className="space-y-3">
+                {topGenres.map((g, idx) => (
+                  <div
+                    key={`legend-${g.category}-${idx}`}
+                    className="flex items-center justify-between rounded-md bg-zinc-50 px-3 py-2"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="h-4 w-4 rounded-sm"
+                        style={{
+                          backgroundColor: GENRE_COLORS[idx % GENRE_COLORS.length],
+                        }}
+                      />
+                      <span className="text-sm font-medium">
+                        {formatGenreLabel(g.category)}
+                      </span>
+                    </div>
+                    <span className="text-xs text-zinc-600">{g.count}권</span>
+                  </div>
+                ))}
+                <p className="text-[11px] text-zinc-500">
+                  이번 달 완독 {genreTotal}권 기준 상위 장르입니다.
+                </p>
               </div>
             </div>
           )}
@@ -324,6 +468,9 @@ export default function HomePage() {
         <h2 className="text-xl font-semibold">책 속 한 구절</h2>
         <RandomQuoteCard />
       </section>
+
+      {/* 이번주 신간 */}
+      <NewArrivals />
     </main>
   );
 }

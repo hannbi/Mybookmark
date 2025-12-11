@@ -63,8 +63,8 @@ export async function GET(_req: NextRequest) {
       )
     `
         )
-        .gt("likes_count", 0)
-        .order("likes_count", { ascending: false })
+        // 공감 0개도 포함해 상위 3개만 노출
+        .order("likes_count", { ascending: false, nullsLast: true })
         .order("created_at", { ascending: false })
         .limit(5);
 

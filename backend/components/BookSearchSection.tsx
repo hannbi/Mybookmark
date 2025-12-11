@@ -60,20 +60,35 @@ export default function BookSearchSection() {
 
   return (
     <section className="space-y-4">
-
-      <form onSubmit={handleSearchSubmit} className="flex gap-2">
+      <form
+        onSubmit={handleSearchSubmit}
+        className="flex items-center gap-2 rounded-full border bg-white px-4 py-2 shadow-sm"
+      >
         <input
           type="text"
-          placeholder="제목/저자/키워드로 책 검색"
-          className="w-full rounded-md border px-3 py-2 text-sm"
+          placeholder="제목·저자·키워드로 검색하세요"
+          className="flex-1 bg-transparent px-1 py-1 text-sm outline-none"
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
         />
         <button
           type="submit"
-          className="whitespace-nowrap rounded-md border px-3 py-2 text-sm"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-white hover:bg-zinc-700"
+          aria-label="검색"
         >
-          검색
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <line x1="16.65" y1="16.65" x2="21" y2="21" />
+          </svg>
         </button>
       </form>
 

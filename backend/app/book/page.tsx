@@ -535,9 +535,9 @@ export default function BookPage() {
 
                   <span className="text-xs text-zinc-500">
                     {libraryInfo.started_at &&
-                      `시작: {libraryInfo.started_at} `}
+                      `시작: ${libraryInfo.started_at} `}
                     {libraryInfo.finished_at &&
-                      `완료: {libraryInfo.finished_at}`}
+                      `완료: ${libraryInfo.finished_at}`}
                   </span>
                 </div>
 
