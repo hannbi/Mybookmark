@@ -10,6 +10,8 @@ import book3 from "../assets/bestbook3.png";
 import book4 from "../assets/bestbook4.png";
 import goodIcon from "../assets/good_icon.png";
 import goodIconOrange from "../assets/good_icon_orange.png";
+import bookIcon from "../assets/book_icon.png";
+import rankIcon from "../assets/rank_icon.png";
 
 export default function Home() {
   const quoteList = [
@@ -323,12 +325,11 @@ export default function Home() {
               {/* 장르 트렌드 */}
               <div className="card trend-card">
                 <div className="section-title-row mb-16">
-                  <span className="section-emoji">📊</span>
-                  <h2 className="section-title-small">이달의 장르 트렌드</h2>
+                  <img src={bookIcon} alt="genre icon" className="section-icon-img" />
+                  <h2 className="section-title-2">이달의 장르 트렌드</h2>
                 </div>
-                <p className="section-sub mb-24">
-                  이번 달 독자들이 가장 많이 읽은 장르를 한눈에 확인해보세요
-                </p>
+                <p className="section-sub-2">이번 달 독자들이 선택한 장르 비율을 보여줘요</p>
+              
 
                 <div className="trend-content">
                   <div className="trend-chart-wrap">
@@ -399,14 +400,10 @@ export default function Home() {
               {/* 활동 랭킹 */}
               <div className="card ranking-card">
                 <div className="section-title-row mb-16">
-                  <span className="section-emoji">🏆</span>
-                  <h2 className="section-title-small">이달의 활동 랭킹</h2>
+                  <img src={rankIcon} alt="ranking icon" className="section-icon-img" />
+                  <h2 className="section-title-2">이달의 활동 랭킹</h2>
                 </div>
-                <p className="section-sub mb-24">
-                  리뷰, 공감, 담기 수를 기준으로 이번 달 가장 활발한 독서
-                  활동을 한 독자들이에요
-                </p>
-
+                <p className="section-sub-2">완독 수와 공감 활동을 바탕으로 한 종합 랭킹이에요.</p>
                 <div className="ranking-list">
                   {ranking.map((user, idx) => (
                     <div key={user.rank} className="ranking-row">
@@ -423,6 +420,9 @@ export default function Home() {
                       </div>
                     </div>
                   ))}
+                </div>
+                <div className="rank-more-btn">
+                  랭킹 더보기
                 </div>
               </div>
             </div>
@@ -493,9 +493,9 @@ export default function Home() {
       {/* ===== FOOTER ===== */}
       <footer className="home-footer">
         <div className="home-container footer-inner">
-          <p className="footer-title">📚 My Bookmark</p>
+          <p className="footer-title">My Bookmark</p>
           <p className="footer-sub">
-            당신의 독서 여정을 차곡차곡 쌓아가는 공간, My Bookmark
+            당신의 독서 여정을 차곡차곡 쌓아가는 공간, 나의 책갈피
           </p>
         </div>
       </footer>
