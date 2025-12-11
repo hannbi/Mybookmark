@@ -1,6 +1,6 @@
 // src/pages/Home.jsx
 
-import React from "react";
+import React, { useState, useRef } from "react";
 import { Search, User } from "lucide-react";
 import "./../styles/Home.css";
 import LogoImg from "../assets/logo.png";
@@ -8,6 +8,8 @@ import book1 from "../assets/bestbook1.png";
 import book2 from "../assets/bestbook2.png";
 import book3 from "../assets/bestbook3.png";
 import book4 from "../assets/bestbook4.png";
+import goodIcon from "../assets/good_icon.png";
+import goodIconOrange from "../assets/good_icon_orange.png";
 
 export default function Home() {
   const quoteList = [
@@ -34,6 +36,104 @@ export default function Home() {
     { rank: 4, name: "지훈 님", score: "공감 668회" },
     { rank: 5, name: "재능 님", score: "공감 612회" },
   ];
+
+  const reviews = [
+    {
+      bookTitle: "트렌드 코리아 2026",
+      author: "저자",
+      review: "대학생이 인문학을 시작하기 딱 좋은 책이다. 일상과 상처를 다루지만 무겁지 않아서 술술 읽힌다…",
+      likes: 48,
+      thumbClass: "thumb-beige"
+    },
+    {
+      bookTitle: "스토너",
+      author: "저자",
+      review: "너무 조용해서 오히려 강렬하다. 평범한 삶이 사실은 얼마나 비극적인지 보여주는 소설…",
+      likes: 42,
+      thumbClass: "thumb-blue"
+    },
+    {
+      bookTitle: "존재의 무게를 말하는 문장들",
+      author: "철학자123",
+      review: "짧은 문장들 안에 삶 전체가 들어있다. 밑줄 치다가 책 한 권을 다 칠해버렸다…",
+      likes: 38,
+      thumbClass: "thumb-beige"
+    },
+    {
+      bookTitle: "달러구트 꿈 백화점",
+      author: "책벌레",
+      review: "따뜻하고 포근한 위로를 받은 느낌. 잠들기 전에 읽기 좋은 책이었어요…",
+      likes: 35,
+      thumbClass: "thumb-yellow"
+    },
+    {
+      bookTitle: "미드나잇 라이브러리",
+      author: "독서왕",
+      review: "선택과 후회에 대한 이야기. 읽고 나서 한동안 여운이 남았던 책…",
+      likes: 31,
+      thumbClass: "thumb-purple"
+    }
+  ];
+
+  const [selectedReview, setSelectedReview] = useState(0); // 1번째 카드가 기본 선택
+
+  const carouselRef = useRef(null);
+  const isDownRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+
+  const handleMouseDown = (e) => {
+    const slider = carouselRef.current;
+    if (!slider) return;
+
+    isDownRef.current = true;
+    slider.classList.add("is-dragging");
+    startXRef.current = e.pageX - slider.offsetLeft;
+    scrollLeftRef.current = slider.scrollLeft;
+  };
+
+  const handleMouseLeave = () => {
+    const slider = carouselRef.current;
+    if (!slider) return;
+
+    isDownRef.current = false;
+    slider.classList.remove("is-dragging");
+  };
+
+  const handleMouseUp = () => {
+    const slider = carouselRef.current;
+    if (!slider) return;
+
+    isDownRef.current = false;
+    slider.classList.remove("is-dragging");
+  };
+
+  const handleMouseMove = (e) => {
+    const slider = carouselRef.current;
+    if (!slider || !isDownRef.current) return;
+
+    e.preventDefault(); // 텍스트 선택 방지
+    const x = e.pageX - slider.offsetLeft;
+    const walk = (x - startXRef.current) * 1.2; // 드래그 민감도
+    slider.scrollLeft = scrollLeftRef.current - walk;
+  };
+
+  const scrollToCard = (index) => {
+    if (!carouselRef.current) return;
+
+    const slider = carouselRef.current;
+    const cards = slider.children;
+
+    if (!cards[index]) return;
+
+    const card = cards[index];
+    const cardLeft = card.offsetLeft;
+
+    slider.scrollTo({
+      left: cardLeft - 20, // 여백 보정값
+      behavior: "smooth",
+    });
+  };
 
   return (
     <div className="home-root">
@@ -152,72 +252,66 @@ export default function Home() {
         <section className="section section-white">
           <div className="home-container">
             <div className="section-title-row">
-              <span className="section-emoji">👍</span>
+              <img src={goodIcon} alt="good" className="section-icon-img" />
               <h2 className="section-title">공감 많은 리뷰 BEST</h2>
               <span className="section-sub">
                 독자들이 가장 공감한 리뷰를 모아봤어요
               </span>
             </div>
 
-            <div className="review-grid">
-              {/* 카드 1 */}
-              <div className="card review-card">
-                <div className="review-top">
-                  <div className="review-book-thumb thumb-beige" />
-                  <div>
-                    <p className="review-title">
-                      아몬드를 읽으면서 조금 웃었다
-                    </p>
-                    <p className="review-author">무료사랑의왕복자</p>
+            <div className="review-carousel"
+              ref={carouselRef}
+              onMouseDown={handleMouseDown}
+              onMouseLeave={handleMouseLeave}
+              onMouseUp={handleMouseUp}
+              onMouseMove={handleMouseMove}
+            >
+              {reviews.map((review, idx) => (
+                <div
+                  key={idx}
+                  className={`card review-carousel-card ${selectedReview === idx ? "selected" : ""
+                    }`}
+                  onClick={() => {
+                    setSelectedReview(idx);
+                    scrollToCard(idx);
+                  }}
+                >
+                  <div className="review-carousel-content">
+                    <div className="review-left">
+                      <p className="review-carousel-title">{review.bookTitle}</p>
+                      <p className="review-carousel-author">{review.author}</p>
+                      <div className="review-divider"></div>
+                      <p className="review-carousel-text">" {review.review} "</p>
+                      <div className="review-like-section">
+                        <img src={goodIconOrange} alt="like" className="like-icon" />
+                        <span className="like-count">{review.likes}</span>
+                      </div>
+                      <div className="review-carousel-buttons">
+                        <button className="btn-outline">리뷰 더보기</button>
+                        <button className="btn-primary">읽고 싶은 책</button>
+                      </div>
+                    </div>
+                    <div className="review-right">
+                      <img
+                        src={idx % 2 === 0 ? book1 : book2}
+                        alt="book"
+                        className="review-book-img-large"
+                      />
+                    </div>
                   </div>
                 </div>
-                <p className="review-text">
-                  “대학생이 인문학을 시작하기 딱 좋은 책이다. 일상과 상처를
-                  다루지만 무겁지 않아서 술술 읽힌다…”
-                </p>
-                <div className="review-buttons">
-                  <button className="btn-outline">자세히 보기</button>
-                  <button className="btn-primary">공감하기</button>
-                </div>
-              </div>
+              ))}
+            </div>
 
-              {/* 카드 2 */}
-              <div className="card review-card">
-                <div className="review-top">
-                  <div className="review-book-thumb thumb-blue" />
-                  <div>
-                    <p className="review-title">스토너</p>
-                    <p className="review-author">무슨일이있나</p>
-                  </div>
-                </div>
-                <p className="review-text">
-                  “너무 조용해서 오히려 강렬하다. 평범한 삶이 사실은 얼마나
-                  비극적인지 보여주는 소설…”
-                </p>
-                <div className="review-buttons">
-                  <button className="btn-outline">자세히 보기</button>
-                  <button className="btn-primary">공감하기</button>
-                </div>
-              </div>
-
-              {/* 카드 3 */}
-              <div className="card review-card">
-                <div className="review-top">
-                  <div className="review-book-thumb thumb-beige" />
-                  <div>
-                    <span className="chip">인문</span>
-                    <p className="review-title">존재의 무게를 말하는 문장들</p>
-                  </div>
-                </div>
-                <p className="review-text">
-                  “짧은 문장들 안에 삶 전체가 들어있다. 밑줄 치다가 책 한 권을
-                  다 칠해버렸다…”
-                </p>
-                <div className="review-buttons">
-                  <button className="btn-outline">자세히 보기</button>
-                  <button className="btn-primary">공감하기</button>
-                </div>
-              </div>
+            {/* 원형 인디케이터 */}
+            <div className="carousel-dots">
+              {reviews.map((_, idx) => (
+                <button
+                  key={idx}
+                  className={`carousel-dot ${selectedReview === idx ? "active" : ""}`}
+                  onClick={() => setSelectedReview(idx)}
+                />
+              ))}
             </div>
           </div>
         </section>
