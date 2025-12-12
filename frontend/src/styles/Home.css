@@ -221,8 +221,8 @@ body {
 .weekly-books {
     display: flex;
     justify-content: center;
-    gap: 100px;
-    margin: 80px 20px;
+    gap: 120px;
+    margin: 90px 20px;
 }
 
 /* ===== 카드 하나 ===== */
@@ -234,8 +234,8 @@ body {
 
 /* ===== 이미지 들어가는 흰색 카드 ===== */
 .book-img-wrap {
-    width: 250px;
-    height: 350px;
+    width: 240px;
+    height: 340px;
     background: #ffffff;
     border-radius: 18px;
     box-shadow: 0px 10px 25px rgba(80, 64, 55, 0.28);
@@ -313,7 +313,7 @@ body {
 }
 
 .weekly-more-btn {
-    padding: 10px 20px;
+    padding: 8px 20px;
     border-radius: 999px;
     border: 1px solid #fffbf6;
     background: #7b6f64;
@@ -706,46 +706,54 @@ body {
 .ranking-card {
     background: #ffffff;
     border-radius: 24px;
-    padding: 32px;
+    padding: 28px;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
 .trend-content {
   display: flex;
   gap: 40px;
+
 }
 
 .trend-chart-wrap {
-  width: 240px;
-  height: 240px;
+  width: 250px;
+  height: 245px;
   margin: 0 auto;
 }
 
 
 .trend-chart {
-    width: 100%;
-    height: 100%;
-    transform: rotate(-90deg);
+    width: 130%;
+    height: 130%;
+    transform: rotate(-100deg);
+    margin-left: -100px;
+    margin-top: -20px;
 }
 
 .trend-legend {
-    font-size: 11px;
-    color: #5c5045;
+    font-size: 20px;
+    color: #3C2F2F;
+    font-weight: 600;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
+    
 }
 
 .legend-row {
     display: flex;
     align-items: center;
     gap: 8px;
+    transform: translate(-60px, 40px);
+    
 }
 
 .legend-dot {
-    width: 12px;
-    height: 12px;
+    width: 20px;
+    height: 20px;
     border-radius: 3px;
+    transform: translateY(-px);
 }
 
 .dot-orange {
@@ -773,19 +781,19 @@ body {
     display: flex;
     align-items: center;
     padding: 10px 0;
-    gap: 16px;
+    gap: 20px;
 }
 
 .ranking-rank {
-    font-size: 20px;
+    font-size: 25px;
     font-weight: 700;
-    color: #d87b33;
+    color: #3C2F2F;
     width: 24px;
     text-align: center;
 }
 
 .ranking-top {
-    color: #f97316;
+    color: #D65E18;
 }
 
 .ranking-content {
@@ -794,11 +802,11 @@ body {
     justify-content: space-between;
     align-items: center;
     padding-bottom: 4px;
-    border-bottom: 1px dashed #eee2d3;
+    border-bottom: 1px dashed #ffffff;
 }
 
 .ranking-name {
-  font-size: 15px;
+  font-size: 20px;
   font-weight: 600;
   color: #3b3128;
 }
@@ -811,10 +819,10 @@ body {
 
 .rank-more-btn {
   display: block;
-  text-align: right;
+  text-align: center;
   margin-top: 8px;
   font-size: 13px;
-  color: #c48a5a;
+  color: #7b6f64;
   cursor: pointer;
 }
 /* ===== 책 속 한 구절 ===== */

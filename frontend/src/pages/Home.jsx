@@ -137,6 +137,36 @@ export default function Home() {
     });
   };
 
+  const data = [
+    { label: "소설", value: 42, color: "#D65E18" },
+    { label: "시 / 에세이", value: 27, color: "#e87a3aff" },
+    { label: "어린이 / 유아동", value: 18, color: "#e6986aff" },
+    { label: "경제 / 경영", value: 13, color: "#eaba9eff" },
+    { label: "역사 / 문화", value: 13, color: "#f7ddceff" },
+  ];
+
+  const polarToCartesian = (cx, cy, r, angle) => {
+    const rad = (angle - 90) * Math.PI / 180;
+    return {
+      x: cx + r * Math.cos(rad),
+      y: cy + r * Math.sin(rad),
+    };
+  };
+
+  const describeArc = (cx, cy, r, startAngle, endAngle) => {
+    const start = polarToCartesian(cx, cy, r, endAngle);
+    const end = polarToCartesian(cx, cy, r, startAngle);
+    const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
+
+    return `
+    M ${cx} ${cy}
+    L ${start.x} ${start.y}
+    A ${r} ${r} 0 ${largeArcFlag} 0 ${end.x} ${end.y}
+    Z
+  `;
+  };
+
+
   return (
     <div className="home-root">
       {/* ===== HEADER ===== */}
@@ -322,77 +352,66 @@ export default function Home() {
         <section className="section section-gray">
           <div className="home-container">
             <div className="trend-ranking-grid">
+
               {/* 장르 트렌드 */}
               <div className="card trend-card">
                 <div className="section-title-row mb-16">
                   <img src={bookIcon} alt="genre icon" className="section-icon-img" />
                   <h2 className="section-title-2">이달의 장르 트렌드</h2>
                 </div>
-                <p className="section-sub-2">이번 달 독자들이 선택한 장르 비율을 보여줘요</p>
-              
+                <p className="section-sub-2">
+                  이번 달 독자들이 선택한 장르 비율을 보여줘요
+                </p>
 
                 <div className="trend-content">
+                  {/* pie chart */}
                   <div className="trend-chart-wrap">
                     <svg viewBox="0 0 100 100" className="trend-chart">
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="35"
-                        fill="none"
-                        stroke="#f97316"
-                        strokeWidth="20"
-                        strokeDasharray="220"
-                        strokeDashoffset="0"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="35"
-                        fill="none"
-                        stroke="#60a5fa"
-                        strokeWidth="20"
-                        strokeDasharray="220"
-                        strokeDashoffset="90"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="35"
-                        fill="none"
-                        stroke="#facc15"
-                        strokeWidth="20"
-                        strokeDasharray="220"
-                        strokeDashoffset="145"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="35"
-                        fill="none"
-                        stroke="#d1d5db"
-                        strokeWidth="20"
-                        strokeDasharray="220"
-                        strokeDashoffset="185"
-                      />
+                      {(() => {
+                        const total = data.reduce((sum, item) => sum + item.value, 0);
+                        let currentAngle = 0;
+
+                        return data.map((item, idx) => {
+                          const angle = (item.value / total) * 360;
+                          const path = describeArc(
+                            50,
+                            50,
+                            40,
+                            currentAngle,
+                            currentAngle + angle
+                          );
+                          currentAngle += angle;
+
+                          return (
+                            <path
+                              key={idx}
+                              d={path}
+                              fill={item.color}
+                            />
+                          );
+                        });
+                      })()}
                     </svg>
                   </div>
+
+                  {/* legend */}
                   <div className="trend-legend">
-                    <div className="legend-row">
-                      <span className="legend-dot dot-orange" />
-                      <span>소설 · 42%</span>
-                    </div>
-                    <div className="legend-row">
-                      <span className="legend-dot dot-blue" />
-                      <span>시 / 에세이 · 27%</span>
-                    </div>
-                    <div className="legend-row">
-                      <span className="legend-dot dot-yellow" />
-                      <span>어린이 / 유아동 · 18%</span>
-                    </div>
-                    <div className="legend-row">
-                      <span className="legend-dot dot-gray" />
-                      <span>역사 / 문화 · 13%</span>
-                    </div>
+                    {data.map((item, idx) => {
+                      const total = data.reduce((sum, d) => sum + d.value, 0);
+                      const percent = Math.round((item.value / total) * 100);
+
+                      return (
+                        <div className="legend-row" key={idx}>
+                          <span
+                            className="legend-dot"
+                            style={{ backgroundColor: item.color }}
+                          />
+                          <span>
+                            {item.label} · {percent}%
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -403,7 +422,10 @@ export default function Home() {
                   <img src={rankIcon} alt="ranking icon" className="section-icon-img" />
                   <h2 className="section-title-2">이달의 활동 랭킹</h2>
                 </div>
-                <p className="section-sub-2">완독 수와 공감 활동을 바탕으로 한 종합 랭킹이에요.</p>
+                <p className="section-sub-2">
+                  완독 수와 공감 활동을 바탕으로 한 종합 랭킹이에요.
+                </p>
+
                 <div className="ranking-list">
                   {ranking.map((user, idx) => (
                     <div key={user.rank} className="ranking-row">
@@ -421,16 +443,18 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
+
                 <div className="rank-more-btn">
                   랭킹 더보기
                 </div>
               </div>
+
             </div>
           </div>
         </section>
 
         {/* ===== 책 속 한 구절 ===== */}
-        <section className="section section-white">
+        < section className="section section-white" >
           <div className="home-container">
             <div className="section-title-row">
               <span className="section-emoji">📖</span>
@@ -455,10 +479,10 @@ export default function Home() {
               ))}
             </div>
           </div>
-        </section>
+        </section >
 
         {/* ===== 이번주 신간 ===== */}
-        <section className="section section-gray">
+        < section className="section section-gray" >
           <div className="home-container">
             <div className="section-title-row">
               <span className="section-emoji">✨</span>
@@ -487,18 +511,18 @@ export default function Home() {
               </button>
             </div>
           </div>
-        </section>
-      </main>
+        </section >
+      </main >
 
       {/* ===== FOOTER ===== */}
-      <footer className="home-footer">
+      < footer className="home-footer" >
         <div className="home-container footer-inner">
           <p className="footer-title">My Bookmark</p>
           <p className="footer-sub">
             당신의 독서 여정을 차곡차곡 쌓아가는 공간, 나의 책갈피
           </p>
         </div>
-      </footer>
-    </div>
+      </footer >
+    </div >
   );
 }
