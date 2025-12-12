@@ -57,12 +57,13 @@ export default function MyLibraryPage() {
     }
     if (user) {
       const supabase = createSupabaseBrowserClient();
-      supabase
-        .from("profiles")
-        .select("nickname")
-        .eq("id", user.id)
-        .maybeSingle()
-        .then(({ data }) => {
+      (async () => {
+        try {
+          const { data } = await supabase
+            .from("profiles")
+            .select("nickname")
+            .eq("id", user.id)
+            .maybeSingle();
           if (data?.nickname) {
             setDisplayName(data.nickname);
           } else {
@@ -72,8 +73,10 @@ export default function MyLibraryPage() {
               user.email;
             setDisplayName(meta);
           }
-        })
-        .catch(() => setDisplayName(user.email));
+        } catch {
+          setDisplayName(user?.email ?? null);
+        }
+      })();
     }
   }, [loading, user, router]);
 
@@ -157,6 +160,11 @@ export default function MyLibraryPage() {
     };
   }, [items]);
 
+  const statusCardClass = (status: "all" | "want" | "reading" | "finished") =>
+    `rounded-lg border bg-white p-3 text-sm cursor-pointer transition ${
+      statusFilter === status ? "ring-2 ring-amber-500 border-amber-500" : ""
+    }`;
+
   // 필터 + 정렬 적용된 목록
   const filteredSortedItems = useMemo(() => {
     let result = [...items];
@@ -208,41 +216,59 @@ export default function MyLibraryPage() {
 
   return (
     <main className="p-6 space-y-6">
-      <section className="flex items-end justify-between gap-4">
+      <section className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">My Library</h1>
           <p className="text-sm text-zinc-600 mt-1">
             {(displayName ?? user?.email) ?? ""} 님의 서재입니다.
           </p>
         </div>
-
-        {/* 대시보드 이동 버튼 */}
-        <Link
-          href="/dashboard"
-          className="rounded border px-3 py-1 text-xs bg-white hover:bg-zinc-50"
-        >
-          대시보드 보기
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/dashboard"
+            className="flex h-9 items-center rounded border px-3 text-xs bg-white hover:bg-zinc-50"
+          >
+            대시보드 보기
+          </Link>
+          <Link
+            href="/quotes/liked"
+            className="flex h-9 items-center rounded border px-3 text-xs bg-white hover:bg-zinc-50"
+          >
+            공감한 구절 모아보기
+          </Link>
+        </div>
       </section>
 
       {/* 간단 통계 카드 */}
       <section className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <div className="rounded-lg border bg-white p-3 text-sm">
+        <div
+          className={statusCardClass("all")}
+          onClick={() => setStatusFilter("all")}
+        >
           <div className="text-xs text-zinc-500 mb-1">전체 책</div>
           <div className="text-xl font-semibold">{stats.total}</div>
         </div>
-        <div className="rounded-lg border bg-white p-3 text-sm">
+        <div
+          className={statusCardClass("want")}
+          onClick={() => setStatusFilter("want")}
+        >
           <div className="text-xs text-zinc-500 mb-1">읽고 싶어요</div>
           <div className="text-xl font-semibold">{stats.want}</div>
         </div>
-        <div className="rounded-lg border bg-white p-3 text-sm">
+        <div
+          className={statusCardClass("reading")}
+          onClick={() => setStatusFilter("reading")}
+        >
           <div className="text-xs text-zinc-500 mb-1">읽는 중</div>
           <div className="text-xl font-semibold">{stats.reading}</div>
           <div className="text-[11px] text-zinc-500 mt-1">
             이번 달 진행 중: {stats.readingThisMonth}
           </div>
         </div>
-        <div className="rounded-lg border bg-white p-3 text-sm">
+        <div
+          className={statusCardClass("finished")}
+          onClick={() => setStatusFilter("finished")}
+        >
           <div className="text-xs text-zinc-500 mb-1">다 읽음</div>
           <div className="text-xl font-semibold">{stats.finished}</div>
           <div className="text-[11px] text-zinc-500 mt-1">
@@ -309,7 +335,7 @@ export default function MyLibraryPage() {
       {errorMsg && <p className="text-sm text-red-500">{errorMsg}</p>}
 
       {/* 필터/정렬 적용된 목록 */}
-      <section className="mt-2 grid grid-cols-2 gap-4 md:grid-cols-4">
+      <section className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredSortedItems.map((item) => {
           const b = item.books;
           if (!b) return null;
@@ -318,45 +344,47 @@ export default function MyLibraryPage() {
             <Link
               key={item.book_id}
               href={`/book?bookId=${b.id}`}
-              className="flex h-48 flex-col justify-between rounded-md border bg-white p-2 text-xs hover:bg-zinc-50"
+              className="flex flex-row gap-3 rounded-md border bg-white p-3 text-xs hover:bg-zinc-50"
             >
               {b.cover && (
-                <div className="mb-1 h-20 overflow-hidden rounded-sm bg-zinc-100">
+                <div className="w-24 sm:w-28 md:w-32 flex-shrink-0 overflow-hidden rounded-sm bg-zinc-100 flex items-center justify-center">
                   <img
                     src={b.cover}
                     alt={b.title}
-                    className="h-full w-full object-cover"
+                    className="max-h-full max-w-full object-contain"
                   />
                 </div>
               )}
 
-              <div className="font-semibold line-clamp-2">{b.title}</div>
-              <div className="text-[11px] text-zinc-600 line-clamp-1">
-                {b.author}
-              </div>
-              <div className="text-[11px] text-zinc-500 line-clamp-1">
-                {b.publisher}
-              </div>
-              <div className="text-[11px] text-zinc-500 line-clamp-1">
-                {b.category}
-              </div>
-
-              <div className="text-[11px] text-zinc-500 line-clamp-1">
-                {statusLabel(item.status)}
-              </div>
-
-              {item.emotion_tag && (
-                <div className="text-[11px] text-amber-700 line-clamp-1">
-                  느낌: {item.emotion_tag}
+              <div className="flex flex-1 flex-col justify-between gap-1">
+                <div className="font-semibold line-clamp-2">{b.title}</div>
+                <div className="text-[11px] text-zinc-600 line-clamp-1">
+                  {b.author}
                 </div>
-              )}
-
-              {(item.started_at || item.finished_at) && (
-                <div className="text-[11px] text-zinc-400 line-clamp-1">
-                  {item.started_at && `시작: ${item.started_at} `}
-                  {item.finished_at && `완료: ${item.finished_at}`}
+                <div className="text-[11px] text-zinc-500 line-clamp-1">
+                  {b.publisher}
                 </div>
-              )}
+                <div className="text-[11px] text-zinc-500 line-clamp-1">
+                  {b.category}
+                </div>
+
+                <div className="text-[11px] text-zinc-500 line-clamp-1">
+                  {statusLabel(item.status)}
+                </div>
+
+                {item.emotion_tag && (
+                  <div className="text-[11px] text-amber-700 line-clamp-1">
+                    느낌: {item.emotion_tag}
+                  </div>
+                )}
+
+                {(item.started_at || item.finished_at) && (
+                  <div className="text-[11px] text-zinc-400 line-clamp-1">
+                    {item.started_at && `시작: ${item.started_at} `}
+                    {item.finished_at && `완료: ${item.finished_at}`}
+                  </div>
+                )}
+              </div>
             </Link>
           );
         })}

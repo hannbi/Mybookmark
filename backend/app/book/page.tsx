@@ -2,7 +2,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSupabaseUser } from "@/lib/hooks/useSupabaseUser";
 import BookQuotesSection from "@/components/BookQuotesSection";
 
@@ -70,6 +70,15 @@ export default function BookPage() {
   const { user } = useSupabaseUser();
   const searchParams = useSearchParams();
   const bookId = searchParams.get("bookId");
+  const focusTarget = searchParams.get("focus");
+  const quoteIdParam = searchParams.get("quoteId");
+  const initialQuoteId =
+    quoteIdParam && !Number.isNaN(Number(quoteIdParam))
+      ? Number(quoteIdParam)
+      : null;
+  const reviewSectionRef = useRef<HTMLElement | null>(null);
+  const quotesSectionRef = useRef<HTMLElement | null>(null);
+  const [highlightReviews, setHighlightReviews] = useState(false);
 
   const [book, setBook] = useState<Book | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -187,6 +196,29 @@ export default function BookPage() {
 
     fetchReviews();
   }, [bookId]);
+
+  useEffect(() => {
+    if (focusTarget !== "reviews") return;
+    if (!reviewSectionRef.current) return;
+
+    reviewSectionRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+    setHighlightReviews(true);
+
+    const timer = setTimeout(() => setHighlightReviews(false), 2000);
+    return () => clearTimeout(timer);
+  }, [focusTarget]);
+
+  useEffect(() => {
+    if (focusTarget !== "quote-comments" && !initialQuoteId) return;
+    if (!quotesSectionRef.current) return;
+    quotesSectionRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, [focusTarget, initialQuoteId]);
 
   async function handleToggleLibrary() {
     if (!bookId) return;
@@ -561,7 +593,13 @@ export default function BookPage() {
           </section>
 
           {/* 리뷰 섹션 */}
-          <section className="mt-8 space-y-4">
+          <section
+            id="reviews"
+            ref={reviewSectionRef}
+            className={`mt-8 space-y-4 ${
+              highlightReviews ? "ring-2 ring-amber-300 ring-offset-2 ring-offset-white" : ""
+            }`}
+          >
             <h2 className="text-lg font-semibold">리뷰</h2>
 
             {/* 작성 / 수정 폼 */}
@@ -720,8 +758,13 @@ export default function BookPage() {
             </div>
           </section>
 
-          {/* 책 속 한 구절(Quote) 섹션 – Quote 전용 컴포넌트 사용 */}
-          <BookQuotesSection bookId={Number(bookId)} />
+          {/* 책 속 한 구절(Quote) 섹션 - Quote 전용 컴포넌트 사용 */}
+          <section ref={quotesSectionRef}>
+            <BookQuotesSection
+              bookId={Number(bookId)}
+              initialOpenQuoteId={initialQuoteId}
+            />
+          </section>
         </>
       )}
     </main>

@@ -7,10 +7,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // 서비스 롤 키 사용 (서버 전용)
-const supabase = createClient(
-  SUPABASE_URL,
-  SUPABASE_SERVICE_ROLE_KEY ?? ""
-);
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY ?? "");
 
 export async function GET() {
   if (!TTB_KEY) {
@@ -86,14 +83,16 @@ export async function GET() {
       }
     }
 
-    // id 가져오기
+    // id 매핑용 isbn 목록 조회
     const isbnList = upsertPayload.map((b) => b.isbn!) as string[];
-    let isbnToId = new Map<string, number>();
+    const isbnToId = new Map<string, number>();
+
     if (isbnList.length > 0) {
       const { data: idRows, error: idErr } = await supabase
         .from("books")
         .select("id, isbn")
         .in("isbn", isbnList);
+
       if (idErr) {
         console.error("Supabase select ids (new) error:", idErr);
       } else {

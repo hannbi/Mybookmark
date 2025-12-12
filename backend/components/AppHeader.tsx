@@ -16,7 +16,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     href: "/",
-    label: "메인",
+    label: "Home",
     isActive: (pathname) => pathname === "/",
   },
   {
@@ -57,12 +57,14 @@ export default function AppHeader() {
       return;
     }
     const supabase = createSupabaseBrowserClient();
-    supabase
-      .from("profiles")
-      .select("nickname")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("nickname")
+          .eq("id", user.id)
+          .maybeSingle();
+
         if (data?.nickname) {
           setDisplayName(data.nickname);
         } else {
@@ -72,10 +74,10 @@ export default function AppHeader() {
             user.email;
           setDisplayName(metaName);
         }
-      })
-      .catch(() => {
-        setDisplayName(user.email);
-      });
+      } catch (err) {
+        setDisplayName(user?.email ?? null);
+      }
+    })();
   }, [user]);
 
   async function handleLogout() {
@@ -92,17 +94,20 @@ export default function AppHeader() {
   return (
     <header className="border-b bg-white">
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-        {/* 왼쪽: 로고 / 서비스명 */}
-        <Link href="/" className="text-base md:text-lg font-semibold tracking-tight">
-          나의 책갈피
-        </Link>
-
-        {/* 가운데: 네비게이션 */}
-        <nav className="flex items-center gap-1 md:gap-2">
+        {/* 왼쪽: 네비게이션 */}
+        <nav className="flex items-center gap-3">
           {navItems.map((item) => (
             <NavLink key={item.href} item={item} pathname={pathname} />
           ))}
         </nav>
+
+        {/* 가운데: 로고/서비스명 */}
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-base md:text-lg font-semibold tracking-tight text-amber-700"
+        >
+          📚 <span>My Bookmark</span>
+        </Link>
 
         {/* 오른쪽: 로그인 상태 */}
         <div className="flex items-center gap-2 text-xs md:text-sm">

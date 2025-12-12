@@ -9,6 +9,7 @@ import RandomQuoteCard from "@/components/RandomQuoteCard";
 import WeeklyBestsellers from "@/components/WeeklyBestsellers";
 import { useSupabaseUser } from "@/lib/hooks/useSupabaseUser";
 import NewArrivals from "@/components/NewArrivals";
+import QuoteHighlights from "@/components/QuoteHighlights";
 
 type FeedReview = {
   id: number;
@@ -35,6 +36,15 @@ type GenreStat = {
   count: number;
 };
 
+type ActivityRank = {
+  userId: string;
+  nickname: string;
+  finishedCount: number;
+  likeCount: number;
+  commentCount: number;
+  score: number;
+};
+
 const GENRE_COLORS = [
   "#d45c1f",
   "#e1772d",
@@ -55,7 +65,6 @@ function formatGenreLabel(raw: string | null | undefined) {
 
 export default function HomePage() {
   // 리뷰 피드 상태
-  const [latest, setLatest] = useState<FeedReview[]>([]);
   const [topLiked, setTopLiked] = useState<FeedReview[]>([]);
   const [loadingFeed, setLoadingFeed] = useState(false);
   const [feedError, setFeedError] = useState<string | null>(null);
@@ -65,6 +74,11 @@ export default function HomePage() {
   const [genreTotal, setGenreTotal] = useState(0);
   const [genreLoading, setGenreLoading] = useState(false);
   const [genreError, setGenreError] = useState<string | null>(null);
+
+  // 활동 랭킹 상태
+  const [activityRanks, setActivityRanks] = useState<ActivityRank[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activityError, setActivityError] = useState<string | null>(null);
 
   const { user } = useSupabaseUser();
 
@@ -82,16 +96,13 @@ export default function HomePage() {
           setFeedError(
             json.error ?? "리뷰 피드를 불러오는 중 오류가 발생했습니다."
           );
-          setLatest([]);
           setTopLiked([]);
         } else {
-          setLatest((json.latest ?? []) as FeedReview[]);
           setTopLiked((json.topLiked ?? []) as FeedReview[]);
         }
       } catch (e) {
         console.error("reviews feed fetch error:", e);
         setFeedError("네트워크 오류가 발생했습니다.");
-        setLatest([]);
         setTopLiked([]);
       } finally {
         setLoadingFeed(false);
@@ -141,6 +152,36 @@ export default function HomePage() {
     loadGenres();
   }, []);
 
+  // 활동 랭킹 로딩 (이번 달)
+  useEffect(() => {
+    async function loadActivityRanks() {
+      setActivityLoading(true);
+      setActivityError(null);
+      try {
+        const res = await fetch("/api/stats/activity-ranking");
+        const json = await res.json();
+
+        if (!res.ok) {
+          console.error("activity ranking error:", json);
+          setActivityError(
+            json.error ?? "활동 랭킹을 불러오는 중 오류가 발생했습니다."
+          );
+          setActivityRanks([]);
+        } else {
+          setActivityRanks((json.ranks ?? []) as ActivityRank[]);
+        }
+      } catch (e) {
+        console.error("activity ranking fetch error:", e);
+        setActivityError("네트워크 오류가 발생했습니다.");
+        setActivityRanks([]);
+      } finally {
+        setActivityLoading(false);
+      }
+    }
+
+    loadActivityRanks();
+  }, []);
+
   // 상위 5개 장르
   const topGenres = [...genreStats]
     .sort((a, b) => b.count - a.count)
@@ -168,67 +209,8 @@ export default function HomePage() {
       {/* 이번 주 베스트셀러 */}
       <WeeklyBestsellers />
 
-      {/* 최근 리뷰 */}
+      {/* 공감 많은 리뷰 */}
       <section className="space-y-3">
-        <div className="flex items-center justify_between">
-          <h2 className="text-xl font-semibold">최근 리뷰</h2>
-        </div>
-
-        {loadingFeed && (
-          <p className="text-xs text-zinc-500">리뷰를 불러오는 중...</p>
-        )}
-        {feedError && !loadingFeed && (
-          <p className="text-xs text-red-500">{feedError}</p>
-        )}
-
-        {!loadingFeed && !feedError && latest.length === 0 && (
-          <p className="text-xs text-zinc-500">
-            아직 등록된 리뷰가 없습니다. 첫 리뷰를 남겨보세요!
-          </p>
-        )}
-
-        {/* 최신 리뷰 리스트 */}
-        <div className="grid gap-3 md:grid-cols-2">
-          {latest.map((r) => (
-            <Link
-              key={`latest-${r.id}`}
-              href={`/book?bookId=${r.books.id}`}
-              className="flex gap-3 rounded-md border bg-white p-3 text-xs hover:bg-zinc-50"
-            >
-              {r.books.cover && (
-                <div className="h-20 w-16 flex-shrink-0 overflow-hidden rounded-sm bg-zinc-100">
-                  <img
-                    src={r.books.cover}
-                    alt={r.books.title}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              )}
-              <div className="flex flex-col gap-1">
-                <div className="font-semibold line-clamp-2">
-                  {r.books.title}
-                </div>
-                <div className="text-[11px] text-zinc-600 line-clamp-1">
-                  {r.books.author}
-                </div>
-                <div className="flex items-center gap-2 text-[11px] text-zinc-500">
-                  <span>{r.profiles?.nickname ?? "익명"}</span>
-                  <span>|</span>
-                  <span>
-                    {"★".repeat(r.rating)}
-                    {"☆".repeat(5 - r.rating)}
-                  </span>
-                  <span>| 공감 {r.likes_count ?? 0}</span>
-                </div>
-                <p className="text-[11px] text-zinc-700 line-clamp-2">
-                  {r.content}
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {/* 공감 많은 리뷰 */}
         <div className="space-y-2">
           <div className="flex items-baseline gap-3">
             <h3 className="text-sm font-semibold">공감 많은 리뷰</h3>
@@ -455,19 +437,62 @@ export default function HomePage() {
         </div>
 
         {/* 활동 랭킹 카드 */}
-        <div className="rounded-lg border bg-white p-4 text-sm">
-          <h3 className="text-base font-semibold mb-2">활동 랭킹</h3>
+        <div className="rounded-2xl border bg-white p-5 text-sm shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <span role="img" aria-label="trophy">
+              🏆
+            </span>
+            <h3 className="text-base font-semibold">이달의 활동 랭킹</h3>
+          </div>
           <p className="text-xs text-zinc-500">
-            완독 수 / 공감 / 리뷰 수 기반 랭킹 영역 (추후 구현 예정)
+            이번 달 완독 50% · 댓글 30% · 공감 20% 가중치로 집계했어요.
           </p>
+
+          {activityLoading && (
+            <p className="mt-3 text-xs text-zinc-500">활동 랭킹을 불러오는 중...</p>
+          )}
+
+          {activityError && !activityLoading && (
+            <p className="mt-3 text-xs text-red-500">{activityError}</p>
+          )}
+
+          {!activityLoading && !activityError && activityRanks.length === 0 && (
+            <p className="mt-3 text-xs text-zinc-500">
+              이번 달 활동 데이터가 아직 없습니다.
+            </p>
+          )}
+
+          {!activityLoading && !activityError && activityRanks.length > 0 && (
+            <div className="mt-4 space-y-3">
+              {activityRanks.map((row, idx) => (
+                <div
+                  key={row.userId}
+                  className="flex items-center justify-between rounded-xl border bg-gradient-to-r from-amber-50/60 to-white px-3 py-2.5"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="text-lg font-semibold text-amber-600">
+                      {idx + 1}
+                    </div>
+                    <div className="text-base font-bold text-zinc-800">
+                      {row.nickname}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-[11px] text-zinc-600">
+                    <span className="font-medium text-zinc-700">
+                      {row.finishedCount}권 완독
+                    </span>
+                    <span>공감 {row.likeCount}</span>
+                    <span>댓글 {row.commentCount}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* 책 속 한 구절 */}
-      <section className="space-y-2">
-        <h2 className="text-xl font-semibold">책 속 한 구절</h2>
-        <RandomQuoteCard />
-      </section>
+      {/* 책 속 한 구절 하이라이트 */}
+      <QuoteHighlights />
 
       {/* 이번주 신간 */}
       <NewArrivals />

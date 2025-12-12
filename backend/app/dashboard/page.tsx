@@ -6,6 +6,20 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSupabaseUser } from "@/lib/hooks/useSupabaseUser";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend,
+  Line,
+} from "recharts";
 
 type LibraryItem = {
   book_id: number;
@@ -40,6 +54,18 @@ export default function DashboardPage() {
   const [items, setItems] = useState<LibraryItem[]>([]);
   const [loadingList, setLoadingList] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [goalTarget, setGoalTarget] = useState<number | null>(null);
+  const [goalProgress, setGoalProgress] = useState<number>(0);
+  const [goalLoading, setGoalLoading] = useState(false);
+  const [goalError, setGoalError] = useState<string | null>(null);
+  const [goalSaving, setGoalSaving] = useState(false);
+  const [trend, setTrend] = useState<
+    { month: string; count: number; cumulative: number }[]
+  >([]);
+  const [trendLoading, setTrendLoading] = useState(false);
+  const [trendError, setTrendError] = useState<string | null>(null);
+
+  const STATUS_COLORS = ["#d45c1f", "#e89456", "#f7d8c2"];
 
   // 로그인 체크
   useEffect(() => {
@@ -48,12 +74,13 @@ export default function DashboardPage() {
     }
     if (user) {
       const supabase = createSupabaseBrowserClient();
-      supabase
-        .from("profiles")
-        .select("nickname")
-        .eq("id", user.id)
-        .maybeSingle()
-        .then(({ data }) => {
+      (async () => {
+        try {
+          const { data } = await supabase
+            .from("profiles")
+            .select("nickname")
+            .eq("id", user.id)
+            .maybeSingle();
           if (data?.nickname) {
             setDisplayName(data.nickname);
           } else {
@@ -63,8 +90,10 @@ export default function DashboardPage() {
               user.email;
             setDisplayName(meta);
           }
-        })
-        .catch(() => setDisplayName(user.email));
+        } catch {
+          setDisplayName(user?.email ?? null);
+        }
+      })();
     }
   }, [loading, user, router]);
 
@@ -96,6 +125,54 @@ export default function DashboardPage() {
     load();
   }, [user]);
 
+  // 월별 목표 로드
+  useEffect(() => {
+    async function loadGoal() {
+      if (!user) return;
+      setGoalLoading(true);
+      setGoalError(null);
+      try {
+        const res = await fetch("/api/goals/monthly");
+        const json = await res.json();
+        if (!res.ok) {
+          setGoalError(json.error ?? "목표를 불러오는 중 오류가 발생했습니다.");
+          return;
+        }
+        setGoalTarget(
+          typeof json.target === "number" ? json.target : null
+        );
+        setGoalProgress(typeof json.progress === "number" ? json.progress : 0);
+      } catch {
+        setGoalError("목표를 불러오는 중 네트워크 오류가 발생했습니다.");
+      } finally {
+        setGoalLoading(false);
+      }
+    }
+    loadGoal();
+  }, [user]);
+
+  // 독서량 추세 로드
+  useEffect(() => {
+    async function loadTrend() {
+      if (!user) return;
+      setTrendLoading(true);
+      setTrendError(null);
+      try {
+        const res = await fetch("/api/stats/reading-trend");
+        const json = await res.json();
+        if (!res.ok) {
+          setTrendError(json.error ?? "독서량을 불러오는 중 오류가 발생했습니다.");
+          return;
+        }
+        setTrend((json.trend ?? []) as typeof trend);
+      } catch {
+        setTrendError("독서량을 불러오는 중 네트워크 오류가 발생했습니다.");
+      } finally {
+        setTrendLoading(false);
+      }
+    }
+    loadTrend();
+  }, [user]);
   // 통계
   const stats = useMemo(() => {
     const total = items.length;
@@ -183,6 +260,32 @@ export default function DashboardPage() {
       .slice(0, 5);
   }, [items]);
 
+  async function handleSaveGoal() {
+    if (goalTarget === null || goalTarget < 0) {
+      alert("목표 권수를 올바르게 입력해 주세요.");
+      return;
+    }
+    setGoalSaving(true);
+    setGoalError(null);
+    try {
+      const res = await fetch("/api/goals/monthly", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target: goalTarget }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setGoalError(json.error ?? "목표 저장에 실패했습니다.");
+        return;
+      }
+      setGoalTarget(json.target ?? goalTarget);
+    } catch {
+      setGoalError("목표 저장 중 네트워크 오류가 발생했습니다.");
+    } finally {
+      setGoalSaving(false);
+    }
+  }
+
   if (loading || (!user && typeof window !== "undefined")) {
     return (
       <main className="p-6">
@@ -193,7 +296,7 @@ export default function DashboardPage() {
 
   return (
     <main className="p-6 space-y-8">
-      <section className="flex items-baseline justify-between gap-4">
+      <section className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">독서 대시보드</h1>
           <p className="text-sm text-zinc-600 mt-1">
@@ -203,15 +306,15 @@ export default function DashboardPage() {
         <div className="flex gap-2 text-xs">
           <Link
             href="/mylibrary"
-            className="rounded border px-3 py-1 bg-white hover:bg-zinc-50"
+            className="flex h-9 items-center rounded border px-3 bg-white hover:bg-zinc-50"
           >
             내 서재 보기
           </Link>
           <Link
-            href="/"
-            className="rounded border px-3 py-1 bg-white hover:bg-zinc-50"
+            href="/quotes/liked"
+            className="flex h-9 items-center rounded border px-3 bg-white hover:bg-zinc-50"
           >
-            책 검색하기
+            공감한 구절 모아보기
           </Link>
         </div>
       </section>
@@ -275,32 +378,163 @@ export default function DashboardPage() {
               아직 서재에 책이 없습니다. 먼저 책을 추가해 보세요.
             </p>
           ) : (
-            <ul className="space-y-1">
-              <li className="flex justify-between">
-                <span>읽고 싶어요</span>
-                <span className="text-xs text-zinc-600">
-                  {stats.want}권 (
-                  {Math.round((stats.want / stats.total) * 100)}
-                  %)
-                </span>
-              </li>
-              <li className="flex justify-between">
-                <span>읽는 중</span>
-                <span className="text-xs text-zinc-600">
-                  {stats.reading}권 (
-                  {Math.round((stats.reading / stats.total) * 100)}
-                  %)
-                </span>
-              </li>
-              <li className="flex justify-between">
-                <span>다 읽음</span>
-                <span className="text-xs text-zinc-600">
-                  {stats.finished}권 (
-                  {Math.round((stats.finished / stats.total) * 100)}
-                  %)
-                </span>
-              </li>
-            </ul>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-[1.1fr_0.9fr] items-center">
+              <div className="h-56 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: "읽고 싶어요", value: stats.want },
+                        { name: "읽는 중", value: stats.reading },
+                        { name: "다 읽음", value: stats.finished },
+                      ]}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius="65%"
+                    labelLine={false}
+                    label={false}
+                  >
+                      {[stats.want, stats.reading, stats.finished].map((_, idx) => (
+                        <Cell
+                          key={`status-slice-${idx}`}
+                          fill={STATUS_COLORS[idx % STATUS_COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: any) => `${value}권`} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="space-y-2 text-xs">
+                {[
+                  { name: "읽고 싶어요", value: stats.want, color: STATUS_COLORS[0] },
+                  { name: "읽는 중", value: stats.reading, color: STATUS_COLORS[1] },
+                  { name: "다 읽음", value: stats.finished, color: STATUS_COLORS[2] },
+                ].map((row) => {
+                  const percent =
+                    stats.total > 0 ? Math.round((row.value / stats.total) * 100) : 0;
+                  return (
+                    <div
+                      key={row.name}
+                      className="flex items-center justify-between rounded border bg-zinc-50 px-3 py-2"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="inline-block h-3 w-3 rounded-sm"
+                          style={{ backgroundColor: row.color }}
+                        />
+                        <span>{row.name}</span>
+                      </div>
+                      <div className="text-zinc-600">
+                        {row.value}권 ({percent}%)
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* 이번 달 목표 */}
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="rounded-lg border bg-white p-4 text-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold">이번 달 목표</h2>
+            <span className="text-xs text-zinc-500">자동 진행률 집계</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={0}
+              className="w-28 rounded border px-2 py-1 text-sm"
+              value={goalTarget ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                setGoalTarget(v === "" ? null : Number(v));
+              }}
+              placeholder="목표 권수"
+            />
+            <button
+              type="button"
+              onClick={handleSaveGoal}
+              disabled={goalSaving || goalTarget === null || goalTarget < 0}
+              className="rounded border px-3 py-1 text-xs bg-white hover:bg-zinc-50 disabled:opacity-60"
+            >
+              {goalSaving ? "저장 중..." : "목표 저장"}
+            </button>
+          </div>
+          {goalLoading && (
+            <p className="text-xs text-zinc-500">목표를 불러오는 중...</p>
+          )}
+          {goalError && (
+            <p className="text-xs text-red-500">{goalError}</p>
+          )}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs text-zinc-600">
+              <span>진행률</span>
+              <span>
+                {goalProgress} / {goalTarget ?? "-"} 권
+              </span>
+            </div>
+            <div className="h-3 w-full overflow-hidden rounded bg-zinc-100">
+              <div
+                className="h-full bg-amber-500 transition-all"
+                style={{
+                  width:
+                    goalTarget && goalTarget > 0
+                      ? `${Math.min(
+                          100,
+                          Math.round((goalProgress / goalTarget) * 100)
+                        )}%`
+                      : "0%",
+                }}
+              />
+            </div>
+            {goalTarget && goalTarget > 0 && goalProgress >= goalTarget && (
+              <p className="text-xs text-emerald-600">🎉 목표 달성!</p>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-lg border bg-white p-4 text-sm space-y-2">
+          <h2 className="text-base font-semibold">월별 독서량</h2>
+          {trendLoading && (
+            <p className="text-xs text-zinc-500">독서량을 불러오는 중...</p>
+          )}
+          {trendError && (
+            <p className="text-xs text-red-500">{trendError}</p>
+          )}
+          {!trendLoading && trend.length === 0 && (
+            <p className="text-xs text-zinc-500">
+              아직 완독한 책이 없습니다.
+            </p>
+          )}
+          {trend.length > 0 && (
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={trend} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="count" name="완독 권수" fill="#e1772d" />
+                  <Line
+                    type="monotone"
+                    dataKey="cumulative"
+                    name="누적 완독"
+                    stroke="#d45c1f"
+                    strokeWidth={2}
+                    dot={{ r: 2 }}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           )}
         </div>
       </section>
@@ -325,12 +559,12 @@ export default function DashboardPage() {
                     className="flex justify-between rounded px-2 py-1 hover:bg-zinc-50"
                   >
                     <div className="truncate">
-                      <span className="font-medium text-xs">
+                      <div className="font-medium text-xs truncate">
                         {b.title}
-                      </span>
-                      <span className="text-[11px] text-zinc-500 ml-1">
+                      </div>
+                      <div className="text-[11px] text-zinc-500 truncate">
                         {b.author}
-                      </span>
+                      </div>
                     </div>
                     <span className="text-[11px] text-zinc-500">
                       {new Date(it.created_at).toISOString().slice(0, 10)}
@@ -360,12 +594,12 @@ export default function DashboardPage() {
                     className="flex justify-between rounded px-2 py-1 hover:bg-zinc-50"
                   >
                     <div className="truncate">
-                      <span className="font-medium text-xs">
+                      <div className="font-medium text-xs truncate">
                         {b.title}
-                      </span>
-                      <span className="text-[11px] text-zinc-500 ml-1">
+                      </div>
+                      <div className="text-[11px] text-zinc-500 truncate">
                         {b.author}
-                      </span>
+                      </div>
                     </div>
                     <span className="text-[11px] text-zinc-500">
                       {it.finished_at &&

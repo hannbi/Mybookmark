@@ -18,11 +18,24 @@ type Quote = {
     } | null;
 };
 
-type Props = {
-    bookId: number;
+type QuoteComment = {
+    id: number;
+    quote_id: number;
+    user_id: string;
+    content: string;
+    created_at: string;
+    profiles?: {
+        id: string;
+        nickname: string | null;
+    } | null;
 };
 
-export default function BookQuotesSection({ bookId }: Props) {
+type Props = {
+    bookId: number;
+    initialOpenQuoteId?: number | null;
+};
+
+export default function BookQuotesSection({ bookId, initialOpenQuoteId = null }: Props) {
     const { user } = useSupabaseUser();
 
     const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -32,6 +45,15 @@ export default function BookQuotesSection({ bookId }: Props) {
     const [content, setContent] = useState("");
     const [page, setPage] = useState<string>("");
     const [submitting, setSubmitting] = useState(false);
+    const [openQuoteId, setOpenQuoteId] = useState<number | null>(initialOpenQuoteId);
+    const [commentState, setCommentState] = useState<
+        Record<
+            number,
+            { items: QuoteComment[]; loading: boolean; error: string | null }
+        >
+    >({});
+    const [commentInputs, setCommentInputs] = useState<Record<number, string>>({});
+    const [commentSubmittingId, setCommentSubmittingId] = useState<number | null>(null);
 
     // 목록 불러오기
     useEffect(() => {
@@ -61,6 +83,110 @@ export default function BookQuotesSection({ bookId }: Props) {
 
         loadQuotes();
     }, [bookId]);
+
+    // 처음 들어올 때 특정 구절의 댓글을 펼치기
+    useEffect(() => {
+        if (!initialOpenQuoteId) return;
+        const target = quotes.find((q) => q.id === initialOpenQuoteId);
+        if (!target) return;
+        setOpenQuoteId(initialOpenQuoteId);
+        fetchComments(initialOpenQuoteId);
+        const el = document.getElementById(`quote-card-${initialOpenQuoteId}`);
+        if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }, [initialOpenQuoteId, quotes]);
+
+    async function fetchComments(quoteId: number) {
+        setCommentState((prev) => ({
+            ...prev,
+            [quoteId]: { items: prev[quoteId]?.items ?? [], loading: true, error: null },
+        }));
+        try {
+            const res = await fetch(`/api/quote-comments?quoteId=${quoteId}`);
+            const json = await res.json();
+            if (!res.ok) {
+                setCommentState((prev) => ({
+                    ...prev,
+                    [quoteId]: {
+                        items: [],
+                        loading: false,
+                        error: json.error ?? "댓글을 불러오는 중 오류가 발생했습니다.",
+                    },
+                }));
+                return;
+            }
+            setCommentState((prev) => ({
+                ...prev,
+                [quoteId]: { items: (json.comments ?? []) as QuoteComment[], loading: false, error: null },
+            }));
+        } catch (e) {
+            console.error("quote comments fetch error:", e);
+            setCommentState((prev) => ({
+                ...prev,
+                [quoteId]: {
+                    items: [],
+                    loading: false,
+                    error: "네트워크 오류가 발생했습니다.",
+                },
+            }));
+        }
+    }
+
+    function handleToggleComments(quoteId: number) {
+        if (openQuoteId === quoteId) {
+            setOpenQuoteId(null);
+            return;
+        }
+        setOpenQuoteId(quoteId);
+        if (!commentState[quoteId]) {
+            fetchComments(quoteId);
+        }
+    }
+
+    async function handleSubmitComment(quoteId: number) {
+        if (!user) {
+            alert("로그인 후 댓글을 남길 수 있습니다.");
+            return;
+        }
+        const text = (commentInputs[quoteId] ?? "").trim();
+        if (!text) {
+            alert("댓글 내용을 입력해 주세요.");
+            return;
+        }
+
+        setCommentSubmittingId(quoteId);
+        try {
+            const res = await fetch("/api/quote-comments", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ quoteId, content: text }),
+            });
+            const json = await res.json();
+            if (!res.ok) {
+                alert(json.error ?? "댓글 작성 중 오류가 발생했습니다.");
+                return;
+            }
+
+            setCommentState((prev) => {
+                const existing = prev[quoteId]?.items ?? [];
+                return {
+                    ...prev,
+                    [quoteId]: {
+                        items: [json.comment as QuoteComment, ...existing],
+                        loading: false,
+                        error: null,
+                    },
+                };
+            });
+            setCommentInputs((prev) => ({ ...prev, [quoteId]: "" }));
+        } catch (e) {
+            console.error("quote comments post error:", e);
+            alert("댓글 작성 중 오류가 발생했습니다.");
+        } finally {
+            setCommentSubmittingId(null);
+        }
+    }
 
     // 인용문 등록
     async function handleAddQuote(e: React.FormEvent) {
@@ -212,9 +338,12 @@ export default function BookQuotesSection({ bookId }: Props) {
             <div className="space-y-2">
                 {quotes.map((q) => {
                     const isMine = user && q.user_id === user.id;
+                    const isOpen = openQuoteId === q.id;
+                    const comments = commentState[q.id];
                     return (
                         <div
                             key={q.id}
+                            id={`quote-card-${q.id}`}
                             className="rounded-md border bg-white px-3 py-2 text-xs"
                         >
                             <div className="flex items-center justify-between mb-1">
@@ -238,13 +367,90 @@ export default function BookQuotesSection({ bookId }: Props) {
                             <p className="whitespace-pre-wrap leading-relaxed mb-1">
                                 {q.content}
                             </p>
-                            <button
-                                type="button"
-                                onClick={() => handleToggleLike(q.id)}
-                                className="text-[11px] text-amber-600 hover:underline"
-                            >
-                                공감 {q.likes_count ?? 0}
-                            </button>
+                            <div className="mt-2 flex items-center gap-2 text-[11px] text-zinc-600">
+                                <button
+                                    type="button"
+                                    onClick={() => handleToggleComments(q.id)}
+                                    className="flex items-center gap-1 rounded px-2 py-1 hover:bg-zinc-50"
+                                >
+                                    {isOpen ? "댓글 접기" : "댓글 보기"}
+                                    {comments && comments.items.length > 0
+                                        ? `(${comments.items.length})`
+                                        : ""}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleToggleLike(q.id)}
+                                    className="flex items-center gap-1 rounded px-2 py-1 hover:bg-zinc-50 text-amber-600"
+                                >
+                                    공감 {q.likes_count ?? 0}
+                                </button>
+                            </div>
+
+                            {isOpen && (
+                                <div className="mt-2 space-y-2 border-t pt-2 text-[11px]">
+                                    {comments?.loading && (
+                                        <p className="text-zinc-500">댓글을 불러오는 중...</p>
+                                    )}
+                                    {comments?.error && (comments?.items?.length ?? 0) > 0 && (
+                                        <p className="text-red-500">{comments.error}</p>
+                                    )}
+
+                                    {user ? (
+                                        <div className="space-y-1">
+                                            <textarea
+                                                className="w-full rounded border px-2 py-1 text-[11px]"
+                                                rows={2}
+                                                placeholder="구절에 대한 생각을 남겨 보세요."
+                                                value={commentInputs[q.id] ?? ""}
+                                                onChange={(e) =>
+                                                    setCommentInputs((prev) => ({
+                                                        ...prev,
+                                                        [q.id]: e.target.value,
+                                                    }))
+                                                }
+                                            />
+                                            <div className="flex justify-end">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleSubmitComment(q.id)}
+                                                    disabled={commentSubmittingId === q.id}
+                                                    className="rounded border px-2 py-1 text-[11px] bg-white hover:bg-zinc-50 disabled:opacity-60"
+                                                >
+                                                    {commentSubmittingId === q.id ? "등록 중..." : "댓글 남기기"}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-zinc-500">로그인 후 댓글을 남길 수 있습니다.</p>
+                                    )}
+
+                                    <div className="space-y-1">
+                                        {(comments?.items ?? []).map((c) => (
+                                            <div
+                                                key={c.id}
+                                                className="rounded border bg-zinc-50 px-2 py-1"
+                                            >
+                                                <div className="flex justify-between">
+                                                    <span className="font-medium text-[11px]">
+                                                        {c.profiles?.nickname ?? "익명"}
+                                                    </span>
+                                                    <span className="text-[10px] text-zinc-500">
+                                                        {new Date(c.created_at).toISOString().slice(0, 10)}
+                                                    </span>
+                                                </div>
+                                                <p className="whitespace-pre-wrap leading-relaxed text-[11px] mt-1">
+                                                    {c.content}
+                                                </p>
+                                            </div>
+                                        ))}
+
+                                        {comments && comments.items.length === 0 && !comments.loading && !comments.error && (
+                                            <p className="text-zinc-500">첫 댓글을 남겨 보세요.</p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     );
                 })}

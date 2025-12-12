@@ -272,11 +272,51 @@ export async function PATCH(request: NextRequest) {
     );
   }
 
+  // ── 목표(월별) 최신 진행률 포함 응답 ──
+  // 이번 달 범위
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth(); // 0-based
+  const start = new Date(year, month, 1).toISOString().slice(0, 10);
+  const end = new Date(year, month + 1, 0).toISOString().slice(0, 10);
+
+  // 이번 달 완독 수
+  const { count: finishedCount, error: finishedError } = await supabase
+    .from("user_books")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("status", "finished")
+    .gte("finished_at", start)
+    .lte("finished_at", end);
+
+  if (finishedError) {
+    console.error("user_books finished count error:", finishedError);
+  }
+
+  // 이번 달 목표
+  const { data: goalRow, error: goalError } = await supabase
+    .from("monthly_goals")
+    .select("target")
+    .eq("user_id", user.id)
+    .eq("year", year)
+    .eq("month", month + 1)
+    .maybeSingle();
+
+  if (goalError) {
+    console.error("monthly_goals select in PATCH error:", goalError);
+  }
+
   return NextResponse.json({
     ok: true,
     status: newStatus,
     started_at: startedAt,
     finished_at: finishedAt,
     emotion_tag: emotionTag,
+    goal: {
+      year,
+      month: month + 1,
+      target: goalRow?.target ?? null,
+      progress: finishedCount ?? 0,
+    },
   });
 }
