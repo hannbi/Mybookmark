@@ -12,15 +12,88 @@ import goodIcon from "../assets/good_icon.png";
 import goodIconOrange from "../assets/good_icon_orange.png";
 import bookIcon from "../assets/book_icon.png";
 import rankIcon from "../assets/rank_icon.png";
+import textIcon from "../assets/text_icon.png";
+import commentIcon from "../assets/comment_icon.png";
+import blankHeart from "../assets/blankheart.png";
+import fillHeart from "../assets/fillheart.png";
+import blankSave from "../assets/blanksave.png";
+import fillSave from "../assets/fillsave.png";
+
 
 export default function Home() {
   const quoteList = [
-    "책의 깊이와 감동이 오래도록 남습니다.",
-    "대학생이 인문학을 시작하기 딱 좋은 책이었어요.",
-    "재미있고 자극적인데 묵직한 여운이 남는 독서였습니다.",
-    "새로운 관점을 열어준 훌륭한 철학서입니다.",
-    "가을밤에 읽기 좋은, 잔잔한 로맨스 소설이었어요.",
-    "가볍게 시작했다가 생각보다 진지하게 나를 돌아보게 했던 책.",
+    {
+      id: 1,
+      user: "민수",
+      quote: "책의 깊이와 감동이 오래도록 남습니다.",
+      book: "문장의 온도",
+      author: "이기주",
+      comments: 12,
+      likes: 105,
+    },
+    {
+      id: 2,
+      user: "한비",
+      quote: "내 마음은 언제나 메마른 언덕이었다.",
+      book: "어른의 문장",
+      author: "김소연",
+      comments: 12,
+      likes: 103,
+    },
+    {
+      id: 3,
+      user: "수현",
+      quote: "사람의 마음은 쉽게 무너지지 않지만, 한 번 금이 가면 오래 남는다.",
+      book: "마음의 결",
+      author: "박지은",
+      comments: 8,
+      likes: 97,
+    },
+    {
+      id: 4,
+      user: "수지",
+      quote: "사람의 마음은 쉽게 무너지지 않지만, 한 번 금이 가면 오래 남는다.",
+      book: "마음의 결",
+      author: "박지은",
+      comments: 8,
+      likes: 97,
+    },
+    {
+      id: 5,
+      user: "정수",
+      quote: "사람의 마음은 쉽게 무너지지 않지만, 한 번 금이 가면 오래 남는다.",
+      book: "마음의 결",
+      author: "박지은",
+      comments: 8,
+      likes: 97,
+    },
+    {
+      id: 6,
+      user: "율이",
+      quote: "사람의 마음은 쉽게 무너지지 않지만, 한 번 금이 가면 오래 남는다.",
+      book: "마음의 결",
+      author: "박지은",
+      comments: 8,
+      likes: 97,
+    },
+    {
+      id: 7,
+      user: "하늘",
+      quote: "사람의 마음은 쉽게 무너지지 않지만, 한 번 금이 가면 오래 남는다.",
+      book: "마음의 결",
+      author: "박지은",
+      comments: 8,
+      likes: 97,
+    },
+    {
+      id: 8,
+      user: "지아",
+      quote: "사람의 마음은 쉽게 무너지지 않지만, 한 번 금이 가면 오래 남는다.",
+      book: "마음의 결",
+      author: "박지은",
+      comments: 8,
+      likes: 97,
+    },
   ];
 
   const newBooks = [
@@ -78,6 +151,21 @@ export default function Home() {
   ];
 
   const [selectedReview, setSelectedReview] = useState(0); // 1번째 카드가 기본 선택
+  const [likedMap, setLikedMap] = useState({});
+  const [savedMap, setSavedMap] = useState({});
+
+  const toggleLike = (id) => {
+    setLikedMap((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+  const toggleSave = (id) => {
+    setSavedMap((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
   const carouselRef = useRef(null);
   const isDownRef = useRef(false);
@@ -454,32 +542,83 @@ export default function Home() {
         </section>
 
         {/* ===== 책 속 한 구절 ===== */}
-        < section className="section section-white" >
+        <section className="section section-white">
           <div className="home-container">
             <div className="section-title-row">
-              <span className="section-emoji">📖</span>
+              <img src={textIcon} alt="text" className="section-icon-img" />
               <h2 className="section-title">책 속 한 구절</h2>
               <span className="section-sub">
                 독자들이 저장한 명문장들을 모아봤어요
               </span>
             </div>
 
-            <div className="quote-grid">
-              {quoteList.map((quote, idx) => (
-                <div key={idx} className="card quote-card">
-                  <p className="quote-text">“{quote}”</p>
-                  <div className="quote-footer">
-                    <span className="quote-user">독자 {idx + 1}</span>
-                    <div className="quote-buttons">
-                      <button className="btn-outline small">저장</button>
-                      <button className="btn-primary small">공감</button>
+            {/* 🔹 4개 × 2줄 고정 */}
+            <div className="quote-grid-2row">
+              {quoteList.slice(0, 8).map((item, idx) => {
+                const isLiked = !!likedMap[idx];
+
+                return (
+                  <div key={idx} className="card quote-card-fixed">
+                    {/* 작성자 */}
+                    <div className="quote-top">
+                      <span className="quote-writer">{item.user} 님</span>
+                    </div>
+
+                    {/* 한 문장 */}
+                    <p className="quote-text">“{item.quote}”</p>
+
+                    {/* 책명 / 저자 */}
+                    <div className="quote-book">
+                      <span className="quote-book-title">{item.book}</span>
+                      <span className="quote-book-author">| {item.author}</span>
+                    </div>
+
+                    {/* 하단: 댓글 / 공감 / 저장 */}
+                    <div className="quote-actions">
+                      {/* 댓글 */}
+                      <div className="quote-action-item">
+                        <img src={commentIcon} alt="댓글" className="meta-icon" />
+                        <span>{item.comments}</span>
+                      </div>
+
+                      {/* 공감 */}
+                      <button
+                        type="button"
+                        className={`quote-action-item like-btn ${isLiked ? "liked" : ""}`}
+                        onClick={() => toggleLike(idx)}
+                      >
+                        <img
+                          src={isLiked ? fillHeart : blankHeart}
+                          alt="공감"
+                          className="heart-icon"
+                        />
+                        <span>{item.likes + (isLiked ? 1 : 0)}</span>
+                      </button>
+
+                      {/* 저장 */}
+                      <button
+                        type="button"
+                        className={`quote-action-item save-btn ${savedMap[idx] ? "saved" : ""}`}
+                        onClick={() => toggleSave(idx)}
+                      >
+                        <img
+                          src={savedMap[idx] ? fillSave : blankSave}
+                          alt="저장"
+                          className="heart-icon"
+                        />
+                        <span>저장</span>
+                      </button>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
+
+            {/* 더보기 */}
+            <div className="quote-more-btn">문장 더보기</div>
           </div>
-        </section >
+        </section>
+
 
         {/* ===== 이번주 신간 ===== */}
         < section className="section section-gray" >

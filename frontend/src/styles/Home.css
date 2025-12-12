@@ -14,6 +14,7 @@ body {
     max-width: 1650px;
     margin: 0 auto;
     padding: 0 20px;
+    overflow-x: visible;
 }
 
 /* ===== HEADER ===== */
@@ -395,12 +396,13 @@ body {
     color: #3b3128;
     margin-right: 15px;
 }
+
 .section-title-2 {
     font-size: 25px;
     font-weight: 800;
     color: #3b3128;
     margin-right: 15px;
-    margin-bottom: -30px; 
+    margin-bottom: -30px;
 }
 
 .section-sub {
@@ -410,12 +412,12 @@ body {
 }
 
 .section-sub-2 {
-  font-size: 16px;
-  font-weight: 500;
-  color: #7b6f64;   
-  margin-top: -50px;  
-  margin-bottom: 30px; 
-  transform: translateX(45px);  
+    font-size: 16px;
+    font-weight: 500;
+    color: #7b6f64;
+    margin-top: -50px;
+    margin-bottom: 30px;
+    transform: translateX(45px);
 }
 
 
@@ -700,6 +702,8 @@ body {
     display: grid;
     grid-template-columns: 1.3fr 1.3fr;
     gap: 30px;
+    margin-top: -30px;
+    margin-bottom: -30px;
 }
 
 .trend-card,
@@ -711,15 +715,15 @@ body {
 }
 
 .trend-content {
-  display: flex;
-  gap: 40px;
+    display: flex;
+    gap: 40px;
 
 }
 
 .trend-chart-wrap {
-  width: 250px;
-  height: 245px;
-  margin: 0 auto;
+    width: 250px;
+    height: 245px;
+    margin: 0 auto;
 }
 
 
@@ -738,22 +742,22 @@ body {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    
+
 }
 
 .legend-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     transform: translate(-60px, 40px);
-    
+
 }
 
 .legend-dot {
     width: 20px;
     height: 20px;
     border-radius: 3px;
-    transform: translateY(-px);
+    transform: translateY(-1px);
 }
 
 .dot-orange {
@@ -806,59 +810,197 @@ body {
 }
 
 .ranking-name {
-  font-size: 20px;
-  font-weight: 600;
-  color: #3b3128;
+    font-size: 20px;
+    font-weight: 600;
+    color: #3b3128;
 }
 
 .ranking-score {
-  margin-left: auto;
-  font-size: 13px;
-  color: #a0917f;
-}
-
-.rank-more-btn {
-  display: block;
-  text-align: center;
-  margin-top: 8px;
-  font-size: 13px;
-  color: #7b6f64;
-  cursor: pointer;
-}
-/* ===== 책 속 한 구절 ===== */
-.quote-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
-}
-
-.quote-card {
-    font-size: 11px;
-}
-
-.quote-text {
-    color: #5c5045;
-    line-height: 1.6;
-    margin-bottom: 14px;
-}
-
-.quote-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 10px;
-    border-top: 1px solid #f1e5d8;
-}
-
-.quote-user {
-    font-size: 11px;
+    margin-left: auto;
+    font-size: 13px;
     color: #a0917f;
 }
 
-.quote-buttons {
-    display: flex;
-    gap: 8px;
+.rank-more-btn {
+    display: block;
+    text-align: center;
+    margin-top: 8px;
+    font-size: 13px;
+    color: #7b6f64;
+    cursor: pointer;
 }
+
+/* ===== 책 속 한 구절 (4개씩 2줄) ===== */
+
+/* 전체 그리드 */
+.quote-grid-2row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+}
+
+/* 카드 */
+.quote-card-fixed {
+    height: 180px;
+    border-radius: 14px;
+    padding: 16px 16px 8px;
+    display: flex;
+    align-items: center;   
+    text-align: center;    
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* 상단 작성자 */
+.quote-top {
+    display: flex;
+    align-items: center;
+}
+
+.quote-writer {
+    font-size: 12px;
+    font-weight: 700;
+    color: #D65E18 ;
+}
+
+/* 한 문장 */
+.quote-text {
+    margin: 8px 0 10px;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: #3C2F2F;
+    line-height: 1.5;
+
+    /* 2줄 말줄임 (표준 + 웹킷) */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* 책명 / 저자 */
+.quote-book {
+    font-size: 12px;
+    color: #3C2F2F;
+    display: flex;
+    gap: 6px;
+    margin-top:-10px;
+    align-items: center;
+}
+
+.quote-book-title {
+    font-weight: 500;
+    color: #7b6f64;
+}
+
+.quote-book-author {
+    color: #7b6f64;
+    font-weight: 500;
+}
+
+/* 하단 영역 */
+.quote-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: -10px 0; 
+    gap: 28px;   
+    border-top: 1px solid #f1e5d8;
+    
+    
+}
+.quote-action-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    min-width: 64px;  
+    text-align: center;
+
+    font-size: 15px;
+    color: #3C2F2F;
+}
+/* 댓글 / 공감 */
+.quote-metas {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 15px;
+    color: #3C2F2F;
+}
+
+.meta-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    transform: translateY(1px);
+}
+
+/* 좋아요 버튼 */
+.like-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    outline: none;
+    box-shadow: none;
+}
+.like-btn:focus,
+.like-btn:active,
+.save-btn:focus,
+.save-btn:active {
+    outline: none;
+    box-shadow: none;
+}
+
+
+/* 하트 이미지 */
+.heart-icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+/* 좋아요 눌렀을 때 숫자 색 */
+.like-btn,.save-btn {
+    color: #3C2F2F;
+    font-weight: 500;
+}
+
+/* 저장하기 */
+.save-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    color: #3C2F2F;
+    font-weight: 500;
+}
+
+.save-btn:hover {
+    color: #3C2F2F;
+}
+
+/* 하단 더보기 버튼 */
+.quote-more-btn {
+    margin-top: 14px;
+    font-size: 12px;
+    color: #7b6f64;
+    text-align: right;
+    cursor: pointer;
+}
+
 
 /* ===== 이번주 신간 ===== */
 .newbook-grid {
