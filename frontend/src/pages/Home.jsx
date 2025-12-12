@@ -97,13 +97,12 @@ export default function Home() {
   ];
 
   const newBooks = [
-    { title: "서울 하늘", colorClass: "nb-bg-blue" },
-    { title: "예술가의 초상", colorClass: "nb-bg-yellow" },
-    { title: "나무", colorClass: "nb-bg-amber" },
-    { title: "코스모스", colorClass: "nb-bg-dark" },
-    { title: "파리의 우울", colorClass: "nb-bg-mix" },
+    { title: "서울 하늘", author: "김작가", img: book1 },
+    { title: "예술가의 초상", author: "이작가", img: book2 },
+    { title: "나무", author: "박작가", img: book3 },
+    { title: "코스모스", author: "최작가", img: book4 },
+    { title: "파리의 우울", author: "정작가", img: book1 },
   ];
-
   const ranking = [
     { rank: 1, name: "한비 님", score: "공감 930회" },
     { rank: 2, name: "민수 님", score: "공감 802회" },
@@ -531,13 +530,11 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-
-                <div className="rank-more-btn">
+              </div>
+            </div>
+            <div className="rank-more-btn">
                   랭킹 더보기
                 </div>
-              </div>
-
-            </div>
           </div>
         </section>
 
@@ -548,7 +545,7 @@ export default function Home() {
               <img src={textIcon} alt="text" className="section-icon-img" />
               <h2 className="section-title">책 속 한 구절</h2>
               <span className="section-sub">
-                독자들이 저장한 명문장들을 모아봤어요
+                독자들이 인상 깊게 느낀 명문장들을 공유해요
               </span>
             </div>
 
@@ -633,22 +630,37 @@ export default function Home() {
 
             <div className="newbook-grid">
               {newBooks.map((book, idx) => (
-                <div key={idx} className="newbook-card">
-                  <div className={`newbook-cover ${book.colorClass}`}>
-                    {book.title}
+                <div key={idx} className="newbook-item">
+
+                  {/* 책 이미지 (흰 카드와 분리된 기준) */}
+                  <div className="newbook-img-wrap">
+                    <img
+                      src={book.img}
+                      alt={book.title}
+                      className="newbook-img"
+                    />
                   </div>
-                  <p className="newbook-title">{book.title}</p>
-                  <p className="newbook-author">저자명</p>
-                  <button className="btn-primary full">담기</button>
+
+                  {/* 흰 카드 (이 부분만 아래로 이동 가능) */}
+                  <div className="newbook-cover-card"></div>
+
+                  {/* 하단 정보 영역 */}
+                  <div className="newbook-meta">
+                    <p className="newbook-title">{book.title}</p>
+                    <p className="newbook-author">{book.author}</p>
+
+                    <div className="newbook-buttons">
+                      <button className="btn-outline">책 상세보기</button>
+                      <button className="btn-primary">읽고 싶은 책</button>
+                    </div>
+                  </div>
+
                 </div>
               ))}
             </div>
+            <div className="quote-more-btn">더 많은 신간 보기</div>
 
-            <div className="weekly-more-wrap">
-              <button className="weekly-more-btn">
-                더 많은 신간 보기 +
-              </button>
-            </div>
+
           </div>
         </section >
       </main >
