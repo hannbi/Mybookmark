@@ -50,6 +50,13 @@ export default function BookDetail() {
             like: 8,
             dislike: 1,
         },
+        {
+            id: 3,
+            user: "민지",
+            text: "조용하지만 오래 남는 책이다.",
+            like: 8,
+            dislike: 1,
+        },
     ];
 
     // 책 속 한 구절 (더미)
@@ -64,6 +71,13 @@ export default function BookDetail() {
         {
             id: 2,
             user: "지아",
+            text: "이 문장 하나로 오늘 하루가 버텨졌다.",
+            comments: 2,
+            likes: 15,
+        },
+         {
+            id: 3,
+            user: "지",
             text: "이 문장 하나로 오늘 하루가 버텨졌다.",
             comments: 2,
             likes: 15,

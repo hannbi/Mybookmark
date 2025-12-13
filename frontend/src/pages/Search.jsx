@@ -103,7 +103,22 @@ export default function SearchPage() {
               <div
                 key={book.id}
                 className="search-book-card"
-                onClick={() => navigate("/book", { state: { book } })}
+                onClick={async () => {
+                  try {
+                    // 🔥 Home에서 쓰는 "외부 API 기반 상세" 호출
+                    const res = await fetch(
+                      `http://localhost:3000/api/books/detail?isbn=${book.isbn}`
+                    );
+                    const data = await res.json();
+
+                    navigate("/book", {
+                      state: { book: data.book },
+                    });
+                  } catch (e) {
+                    console.error(e);
+                    navigate("/book", { state: { book } });
+                  }
+                }}
               >
                 <div className="search-book-img-wrap">
                   <img

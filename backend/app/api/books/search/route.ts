@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
   // 1) 먼저 Supabase에서 현재 저장된 책들 검색
   const { data: existing, error: existingError } = await supabase
     .from("books")
-    .select("id, title, author, publisher, category, isbn, cover")
+    .select("id, title, author, publisher, category, isbn, cover, description")
     .or(
       [
         `title.ilike.%${q}%`,
@@ -84,6 +84,7 @@ export async function GET(req: NextRequest) {
       category: string | null;
       isbn: string | null;
       cover: string | null;
+      description: string | null;
     };
 
     const aladinBooks: AladinBook[] = items.map((item) => ({
@@ -93,6 +94,7 @@ export async function GET(req: NextRequest) {
       category: item.categoryName || null,
       isbn: item.isbn13 || item.isbn || null,
       cover: item.cover || null, // 이미 Big 사이즈
+      description: item.description || null,
     }));
 
     // 2-1) ISBN 기준 매핑
@@ -142,6 +144,7 @@ export async function GET(req: NextRequest) {
         category: fromAladin.category ?? ex.category,
         isbn: ex.isbn || fromAladin.isbn || null,
         cover: fromAladin.cover ?? ex.cover,
+        description: fromAladin.description ?? ex.description,
       });
     }
 
@@ -182,6 +185,7 @@ export async function GET(req: NextRequest) {
             category: b.category,
             isbn: b.isbn,
             cover: b.cover,
+            description: b.description,
           }))
         );
 
@@ -193,7 +197,7 @@ export async function GET(req: NextRequest) {
     // 4) 최종적으로 Supabase 에서 다시 검색해서 최신 상태를 반환
     const { data: finalData, error: finalError } = await supabase
       .from("books")
-      .select("id, title, author, publisher, category, isbn, cover")
+      .select("id, title, author, publisher, category, isbn, cover, description")
       .or(
         [
           `title.ilike.%${q}%`,
