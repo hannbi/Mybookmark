@@ -1,0 +1,223 @@
+.detail-main {
+  background: #fffbf6;
+  padding: 80px 0;
+}
+
+/* ===== GRID ===== */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 700px 1fr;
+  gap: 50px;
+  align-items: flex-start;
+}
+
+/* ===== LEFT ===== */
+.detail-left {
+  display: flex;
+  flex-direction: column;
+  padding-left: 80px;
+  align-items: center;
+}
+
+.detail-book-card {
+  background: #ffffff;
+  padding: 15px;
+  border-radius: 18px;
+  box-shadow: 0 12px 28px rgba(161, 136, 118, 0.25);
+}
+
+.detail-book-img {
+  width: 340px;
+  height: 490px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.detail-isbn {
+  margin-top: 16px;
+  font-size: 15px;
+  color: #7b6f64;
+  text-align: center;
+}
+
+/* ===== RIGHT ===== */
+.detail-category {
+  font-size: 13px;
+  font-weight: 600;
+  color: #D65E18;
+}
+
+.detail-title {
+  font-size: 34px;
+  font-weight: 800;
+  margin: 10px 0;
+  color: #3b3128;
+}
+
+.detail-author {
+  font-size: 16px;
+  color: #7b6f64;
+  margin-bottom: 20px;
+}
+
+.detail-right {
+  padding-right: 160px;
+  padding-left: -100px;
+}
+
+.detail-desc {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #3b3128;
+  max-width: 720px;
+}
+
+/* ===== BUTTONS ===== */
+.detail-buttons {
+  display: flex;
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.library-dropdown {
+  position: relative;
+}
+
+.dropdown-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 44px;
+  left: 0;
+  background: #ffffff;
+  border: 1px solid #ebe3d7;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  z-index: 10;
+}
+
+.dropdown-menu button {
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.dropdown-menu button:hover {
+  background: #f8f1e8;
+}
+
+/* ===== REVIEWS ===== */
+.detail-review-section,
+.detail-quote-section {
+  margin-top: 90px;
+}
+
+.detail-section-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 28px;
+  color: #3b3128;
+}
+
+/* 카드 2개 배치 */
+.detail-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+/* 카드 공통 */
+.detail-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 6px 18px rgba(161, 136, 118, 0.14);
+}
+
+/* 작성자 */
+.detail-user {
+  font-size: 13px;
+  font-weight: 700;
+  color: #D65E18;
+}
+
+/* 텍스트 (리뷰 / 한 구절 공통) */
+.detail-text {
+  margin: 12px 0 16px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: #3b3128;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 얇은 구분선 (Home 책 속 한 구절 느낌) */
+.detail-divider {
+  height: 1px;
+  background: #f1e5d8;
+  margin-bottom: 12px;
+}
+
+/* 하단 액션 영역 */
+.detail-actions {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+}
+
+/* 아이콘 버튼 */
+.icon-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #3C2F2F;
+  padding: 0;
+}
+
+.icon-btn img {
+  width: 18px;
+  height: 18px;
+}
+
+/* 더보기 버튼 */
+.detail-more-btn {
+  margin-top: 20px;
+  text-align: right;
+  font-size: 14px;
+  color: #7b6f64;
+  cursor: pointer;
+}
+
+.detail-more-btn:hover {
+  color: #D65E18;
+}
+
+
+.icon-btn:focus,
+.icon-btn:active,
+.icon-btn:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+
+.icon-btn img {
+  outline: none;
+  border: none;
+}

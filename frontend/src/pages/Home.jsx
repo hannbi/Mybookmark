@@ -358,6 +358,7 @@ export default function Home() {
                 <div
                   key={book.id ?? idx}
                   className={`book-card zigzag-${idx + 1}`}
+                  onClick={() => navigate("/book", { state: { book } })}
                 >
                   <div className="book-img-wrap">
                     <img
@@ -646,8 +647,11 @@ export default function Home() {
 
             <div className="newbook-grid">
               {newReleases.slice(0, 5).map((book, idx) => (
-                <div key={idx} className="newbook-item">
-
+                <div
+                  key={idx}
+                  className="newbook-item"
+                  onClick={() => navigate("/book", { state: { book } })}
+                >
                   {/* 책 이미지 (흰 카드와 분리된 기준) */}
                   <div className="newbook-img-wrap">
                     <img

@@ -100,7 +100,11 @@ export default function SearchPage() {
 
           <div className="search-grid">
             {books.map((book) => (
-              <div key={book.id} className="search-book-card">
+              <div
+                key={book.id}
+                className="search-book-card"
+                onClick={() => navigate("/book", { state: { book } })}
+              >
                 <div className="search-book-img-wrap">
                   <img
                     src={book.cover}
