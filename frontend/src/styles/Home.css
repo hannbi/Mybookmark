@@ -124,7 +124,7 @@ body {
 }
 
 .search-input::placeholder {
-    color: #6e4a1c;
+    color: #b3b1ae;
 }
 
 .search-input:focus {
@@ -143,6 +143,25 @@ body {
     color: #b7a896;
 }
 
+.search-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-btn:focus {
+  outline: none;
+}
+
+.search-btn:focus-visible {
+  outline: none;
+}
+
 /* ===== WEEKLY BESTSELLERS ===== */
 .weekly-section {
     background: linear-gradient(to bottom,
@@ -150,7 +169,7 @@ body {
             #fffbf6 60%,
             #7b6f64 60%,
             #7b6f64 100%);
-    padding-top: 0px;
+    padding-top: 60px;
     padding-bottom: 20px;
 }
 
@@ -292,6 +311,7 @@ body {
 
 .book-info-author {
     margin-top: 4px;
+    margin-bottom: 10px;
     font-size: 12px;
     color: #ffffff;
 }
@@ -329,6 +349,7 @@ body {
     font-size: 15px;
     font-weight: 500;
     color: #fffbf6;
+    transform: translateY(-40px);
     cursor: pointer;
 }
 

@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Search, User } from "lucide-react";
 import "./../styles/Home.css";
+import { useNavigate } from "react-router-dom";
+
 import LogoImg from "../assets/logo.png";
 import book1 from "../assets/bestbook1.png";
 import book2 from "../assets/bestbook2.png";
@@ -20,6 +22,7 @@ import blankSave from "../assets/blanksave.png";
 import fillSave from "../assets/fillsave.png";
 
 export default function Home() {
+  const navigate = useNavigate();
 
   /* Best Sellers API*/
   const [bestsellers, setBestsellers] = useState([]);
@@ -304,10 +307,21 @@ export default function Home() {
           <div className="search-box">
             <input
               type="text"
-              placeholder="검색할 책을 입력해보세요"
+              placeholder="제목이나 저자로 검색할 책을 입력해보세요"
               className="search-input"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  navigate("/search");
+                }
+              }}
             />
-            <Search className="search-icon" />
+            <button
+              type="button"
+              className="search-btn"
+              onClick={() => navigate("/search")}
+            >
+              <Search className="search-icon" />
+            </button>
           </div>
         </div>
       </header>
