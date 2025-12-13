@@ -109,12 +109,26 @@ export async function GET() {
       id: b.isbn ? isbnToId.get(b.isbn) ?? null : null,
     }));
 
-    return NextResponse.json({ books: booksWithId });
-  } catch (e) {
+    return new NextResponse(
+      JSON.stringify({ books: booksWithId }),
+      {
+        status: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "http://localhost:5173",
+          "Access-Control-Allow-Methods": "GET, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      }
+    );
+  } 
+  
+  catch (e) {
     console.error("Aladin bestseller fetch error:", e);
     return NextResponse.json(
       { error: "베스트셀러 정보를 가져오는 중 오류가 발생했습니다." },
       { status: 500 }
     );
   }
+
+  
 }

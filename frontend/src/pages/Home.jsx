@@ -1,6 +1,6 @@
 // src/pages/Home.jsx
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Search, User } from "lucide-react";
 import "./../styles/Home.css";
 import LogoImg from "../assets/logo.png";
@@ -19,8 +19,22 @@ import fillHeart from "../assets/fillheart.png";
 import blankSave from "../assets/blanksave.png";
 import fillSave from "../assets/fillsave.png";
 
-
 export default function Home() {
+
+  /* Best Sellers API*/
+  const [bestsellers, setBestsellers] = useState([]);
+  useEffect(() => {
+    fetch("http://localhost:3000/api/books/bestsellers")
+      .then((res) => res.json())
+      .then((data) => {
+        setBestsellers(data.books ?? []);
+      })
+      .catch((err) => {
+        console.error("베스트셀러 불러오기 실패:", err);
+      });
+  }, []);
+
+
   const quoteList = [
     {
       id: 1,
@@ -312,52 +326,26 @@ export default function Home() {
 
             {/* 책 카드 4개 */}
             <div className="weekly-books">
+              {bestsellers.slice(0, 4).map((book, idx) => (
+                <div
+                  key={book.id ?? idx}
+                  className={`book-card zigzag-${idx + 1}`}
+                >
+                  <div className="book-img-wrap">
+                    <img
+                      src={book.cover}
+                      alt={book.title}
+                      className="book-img"
+                    />
+                  </div>
 
-              {/* 1번 */}
-              <div className="book-card zigzag-1">
-                <div className="book-img-wrap">
-                  <img src={book1} alt="book1" className="book-img" />
+                  <div className="book-info-wrap">
+                    <p className="book-info-title">{book.title}</p>
+                    <p className="book-info-author">{book.author}</p>
+                  </div>
                 </div>
-                <div className="book-info-wrap">
-                  <p className="book-info-title">트렌드 코리아 2026</p>
-                  <p className="book-info-author">김난도 외</p>
-                </div>
-              </div>
-
-              {/* 2번 */}
-              <div className="book-card zigzag-2">
-                <div className="book-img-wrap">
-                  <img src={book2} alt="book2" className="book-img" />
-                </div>
-                <div className="book-info-wrap">
-                  <p className="book-info-title">절창</p>
-                  <p className="book-info-author">국밥묵</p>
-                </div>
-              </div>
-
-              {/* 3번 */}
-              <div className="book-card zigzag-3">
-                <div className="book-img-wrap">
-                  <img src={book3} alt="book3" className="book-img" />
-                </div>
-                <div className="book-info-wrap">
-                  <p className="book-info-title">혼모노</p>
-                  <p className="book-info-author">성해나</p>
-                </div>
-              </div>
-
-              {/* 4번 */}
-              <div className="book-card zigzag-4">
-                <div className="book-img-wrap">
-                  <img src={book4} alt="book4" className="book-img" />
-                </div>
-                <div className="book-info-wrap">
-                  <p className="book-info-title">모순</p>
-                  <p className="book-info-author">양귀자</p>
-                </div>
-              </div>
+              ))}
             </div>
-
             {/* 더보기 버튼 */}
             <div className="weekly-more-wrap">
               <button className="weekly-more-btn">
@@ -533,8 +521,8 @@ export default function Home() {
               </div>
             </div>
             <div className="rank-more-btn">
-                  랭킹 더보기
-                </div>
+              랭킹 더보기
+            </div>
           </div>
         </section>
 
