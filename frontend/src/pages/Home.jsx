@@ -34,6 +34,20 @@ export default function Home() {
       });
   }, []);
 
+  /* New book API*/
+  const [newReleases, setNewReleases] = useState([]);
+  useEffect(() => {
+    fetch("http://localhost:3000/api/books/new")
+      .then((res) => res.json())
+      .then((data) => {
+        setNewReleases(data.books ?? []);
+      })
+      .catch((err) => {
+        console.error("신간 불러오기 실패:", err);
+      });
+  }, []);
+
+
 
   const quoteList = [
     {
@@ -110,13 +124,6 @@ export default function Home() {
     },
   ];
 
-  const newBooks = [
-    { title: "서울 하늘", author: "김작가", img: book1 },
-    { title: "예술가의 초상", author: "이작가", img: book2 },
-    { title: "나무", author: "박작가", img: book3 },
-    { title: "코스모스", author: "최작가", img: book4 },
-    { title: "파리의 우울", author: "정작가", img: book1 },
-  ];
   const ranking = [
     { rank: 1, name: "한비 님", score: "공감 930회" },
     { rank: 2, name: "민수 님", score: "공감 802회" },
@@ -617,13 +624,13 @@ export default function Home() {
             </div>
 
             <div className="newbook-grid">
-              {newBooks.map((book, idx) => (
+              {newReleases.slice(0, 5).map((book, idx) => (
                 <div key={idx} className="newbook-item">
 
                   {/* 책 이미지 (흰 카드와 분리된 기준) */}
                   <div className="newbook-img-wrap">
                     <img
-                      src={book.img}
+                      src={book.cover}
                       alt={book.title}
                       className="newbook-img"
                     />

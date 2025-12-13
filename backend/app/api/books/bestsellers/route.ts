@@ -120,8 +120,8 @@ export async function GET() {
         },
       }
     );
-  } 
-  
+  }
+
   catch (e) {
     console.error("Aladin bestseller fetch error:", e);
     return NextResponse.json(
@@ -129,6 +129,15 @@ export async function GET() {
       { status: 500 }
     );
   }
-
-  
 }
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "http://localhost:5173",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
+}
+
