@@ -212,10 +212,29 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ books: finalData ?? [] });
+    return new NextResponse(
+      JSON.stringify({ books: finalData ?? [] }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "http://localhost:5173",
+        },
+      }
+    );
   } catch (e) {
     console.error("Aladin fetch error:", e);
     // 알라딘이 완전히 실패한 경우: DB에 있던 책이라도 반환
     return NextResponse.json({ books: existing ?? [] });
   }
+}
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "http://localhost:5173",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
 }

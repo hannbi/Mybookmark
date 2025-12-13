@@ -23,6 +23,7 @@ import fillSave from "../assets/fillsave.png";
 
 export default function Home() {
   const navigate = useNavigate();
+  const [query, setQuery] = useState("");
 
   /* Best Sellers API*/
   const [bestsellers, setBestsellers] = useState([]);
@@ -309,16 +310,22 @@ export default function Home() {
               type="text"
               placeholder="제목이나 저자로 검색할 책을 입력해보세요"
               className="search-input"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  navigate("/search");
+                if (e.key === "Enter" && query.trim()) {
+                  navigate(`/search?q=${encodeURIComponent(query)}`);
                 }
               }}
             />
             <button
               type="button"
               className="search-btn"
-              onClick={() => navigate("/search")}
+              onClick={() => {
+                if (query.trim()) {
+                  navigate(`/search?q=${encodeURIComponent(query)}`);
+                }
+              }}
             >
               <Search className="search-icon" />
             </button>
