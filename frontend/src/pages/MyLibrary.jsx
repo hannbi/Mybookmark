@@ -203,9 +203,9 @@ export default function MyLibrary() {
 
   // Pie Chart 데이터
   const pieData = [
-    { label: "읽고싶어요", value: bookCounts.want, color: "#FFB366" },
-    { label: "읽는중", value: bookCounts.reading, color: "#FF8533" },
-    { label: "다 읽음", value: bookCounts.done, color: "#D65E18" }
+    { label: "읽고싶어요", value: bookCounts.want, color: "#D65E18" },
+    { label: "읽는중", value: bookCounts.reading, color: "#e6986aff" },
+    { label: "다 읽음", value: bookCounts.done, color: "#eaba9eff" }
   ];
 
   const polarToCartesian = (cx, cy, r, angle) => {
@@ -424,7 +424,7 @@ export default function MyLibrary() {
               
               {/* 이달의 목표 */}
               <div className="card stat-card">
-                <h3 className="stat-card-title">📚 이달의 목표</h3>
+                <h3 className="stat-card-title">이달의 목표</h3>
                 <p className="stat-card-sub">12월 완독 목표를 설정하고 달성해보세요</p>
                 
                 <div className="goal-content">
@@ -485,7 +485,7 @@ export default function MyLibrary() {
 
               {/* 월별 독서량 */}
               <div className="card stat-card">
-                <h3 className="stat-card-title">📊 월별 독서량</h3>
+                <h3 className="stat-card-title">월별 독서량</h3>
                 <p className="stat-card-sub">최근 6개월간의 독서 기록이에요</p>
                 
                 <div className="monthly-chart">
@@ -512,7 +512,7 @@ export default function MyLibrary() {
 
               {/* 독서 현황 파이 차트 */}
               <div className="card stat-card">
-                <h3 className="stat-card-title">📖 독서 현황</h3>
+                <h3 className="stat-card-title">독서 현황</h3>
                 <p className="stat-card-sub">책 상태별 분포를 한눈에 확인하세요</p>
                 
                 <div className="pie-content">
@@ -572,7 +572,6 @@ export default function MyLibrary() {
         <section className="section section-white">
           <div className="mylibrary-container">
             <div className="section-title-row">
-              <img src={textIcon} alt="text" className="section-icon-img" />
               <h2 className="section-title">저장한 책 속 한 구절</h2>
               <span className="section-sub">
                 마음에 담아둔 문장들을 모아봤어요

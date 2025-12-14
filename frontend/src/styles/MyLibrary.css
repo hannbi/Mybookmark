@@ -184,7 +184,7 @@
 /* ===== 서재 히어로 섹션 ===== */
 .library-hero {
   background: #fffbf6;
-  padding: 80px 0 60px;
+  padding: 40px 0 10px;
 }
 
 .library-hero-title {
@@ -270,6 +270,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  outline: none;
 }
 
 .book-tab:hover {
@@ -279,15 +280,18 @@
 
 .book-tab.active {
   background: #D65E18;
-  border-color: #D65E18;
+  border-color: #94725e;
   color: #fff;
   font-weight: 600;
+}
+.book-tab:focus {
+  outline: none; 
 }
 
 .tab-count {
   font-size: 12px;
   padding: 2px 8px;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(139, 137, 136, 0.1);
   border-radius: 12px;
 }
 
@@ -371,15 +375,15 @@
 }
 
 .status-want {
-  background: #FFB366;
+  background: #D65E18;
 }
 
 .status-reading {
-  background: #FF8533;
+  background: #e6986aff;
 }
 
 .status-done {
-  background: #D65E18;
+  background: #eaba9eff;
 }
 
 .mybook-info {
@@ -409,6 +413,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
   gap: 32px;
+  margin-top:-80px;
+  margin-bottom:-80px;
 }
 
 .stat-card {
@@ -499,7 +505,7 @@
 }
 
 .goal-save-btn:hover {
-  background: #c24d10;
+  background: #b0501c;
 }
 
 .goal-cancel-btn {
@@ -547,7 +553,7 @@
 .goal-complete-msg {
   margin-top: 12px;
   padding: 12px;
-  background: #ffe9d2;
+  background: #fef7f1;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
@@ -584,7 +590,7 @@
 .chart-bar {
   width: 100%;
   max-width: 50px;
-  background: linear-gradient(180deg, #FF8533 0%, #D65E18 100%);
+  background: linear-gradient(180deg, #ec8e4f 0%, #bd5011 100%);
   border-radius: 6px 6px 0 0;
   position: relative;
   transition: all 0.3s ease;
@@ -618,13 +624,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 32px;
-  padding-top: 8px;
+  padding-top: -20px;
 }
 
 .pie-chart-wrap {
   position: relative;
-  width: 160px;
-  height: 160px;
+  width: 170px;
+  height: 170px;
   flex-shrink: 0;
 }
 

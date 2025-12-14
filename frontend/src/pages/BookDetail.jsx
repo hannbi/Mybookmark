@@ -1,5 +1,5 @@
 // src/pages/BookDetail.jsx
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Search, User, ChevronDown } from "lucide-react";
 import "../styles/BookDetail.css";
@@ -15,6 +15,7 @@ import fillHeart from "../assets/fillheart.png";
 import blankSave from "../assets/blanksave.png";
 import fillSave from "../assets/fillsave.png";
 import commentIcon from "../assets/comment_icon.png";
+import supabase from "../lib/supabaseClient";
 
 
 export default function BookDetail() {
@@ -34,6 +35,46 @@ export default function BookDetail() {
         return <div className="detail-empty">책 정보가 없습니다.</div>;
     }
 
+    const [user, setUser] = useState(null);
+    const [nickname, setNickname] = useState("");
+
+    useEffect(() => {
+        let mounted = true;
+
+        const loadUser = async () => {
+            if (!mounted) return;
+
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+
+            if (!user) {
+                setNickname("");
+                return;
+            }
+
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("nickname")
+                .eq("id", user.id)
+                .maybeSingle();
+
+            if (profile?.nickname) {
+                setNickname(profile.nickname);
+            }
+        };
+
+        loadUser();
+
+        const { data: { subscription } } =
+            supabase.auth.onAuthStateChange(() => {
+                loadUser();
+            });
+
+        return () => {
+            mounted = false;
+            subscription.unsubscribe();
+        };
+    }, []);
     // 더미 리뷰 데이터
     const reviewList = [
         {
@@ -75,7 +116,7 @@ export default function BookDetail() {
             comments: 2,
             likes: 15,
         },
-         {
+        {
             id: 3,
             user: "지",
             text: "이 문장 하나로 오늘 하루가 버텨졌다.",
@@ -94,7 +135,9 @@ export default function BookDetail() {
                         <button className="header-menu" onClick={() => navigate("/")}>
                             Home
                         </button>
-                        <button className="header-menu">My Library</button>
+                        <button className="header-menu" onClick={() => navigate("/mylibrary")}>
+                            My Library
+                        </button>
                     </nav>
 
                     <div className="header-logo">
@@ -103,8 +146,29 @@ export default function BookDetail() {
                     </div>
 
                     <div className="header-right">
-                        <User className="header-user-icon" />
-                        <span>한비 님</span>
+                        {!user ? (
+                            <>
+                                <button onClick={() => navigate("/login")}>로그인</button>
+                                <span> / </span>
+                                <button onClick={() => navigate("/register")}>회원가입</button>
+                            </>
+                        ) : (
+                            <>
+                                <User className="header-user-icon" />
+                                <span>{nickname || "사용자"} 님</span>
+                                <button
+                                    className="header-auth-btn"
+                                    onClick={async () => {
+                                        await supabase.auth.signOut();
+                                        setUser(null);
+                                        setNickname("");
+                                        navigate("/");
+                                    }}
+                                >
+                                    | 로그아웃
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
 
