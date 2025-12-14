@@ -48,7 +48,7 @@ export default function Home() {
 
       if (profile?.nickname) {
         setNickname(profile.nickname);
-      } 
+      }
     };
 
     loadUser();
@@ -328,7 +328,9 @@ export default function Home() {
           {/* 좌측 메뉴 */}
           <nav className="header-left">
             <button className="header-menu">Home</button>
-            <button className="header-menu">My Library</button>
+            <button className="header-menu" onClick={() => navigate("/mylibrary")}>
+              My Library
+            </button>
           </nav>
 
           {/* 가운데 로고 */}

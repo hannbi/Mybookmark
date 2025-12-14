@@ -1,0 +1,913 @@
+/* src/styles/MyLibrary.css */
+
+/* ===== 전역 설정 ===== */
+.mylibrary-root {
+  min-height: 100vh;
+  background: #fffbf6;
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+.mylibrary-container {
+  max-width: 1650px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ===== HEADER ===== */
+.mylibrary-header {
+  width: 100%;
+  background: #fffbf6;
+  backdrop-filter: blur(6px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.header-inner {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.header-left {
+  position: absolute;
+  left: 0;
+  display: flex;
+  gap: 24px;
+}
+
+.header-menu {
+  background: none;
+  border: none;
+  font-size: 15px;
+  color: #6c645a;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.header-menu:hover {
+  color: #000;
+}
+
+.header-menu.active {
+  color: #D65E18;
+  font-weight: 600;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-logo-img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.header-logo-text {
+  font-size: 25px;
+  font-weight: 600;
+  color: #D65E18;
+}
+
+.header-right {
+  position: absolute;
+  right: 35px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: #6c645a;
+}
+
+.header-right button {
+  background: none;
+  border: none;
+  outline: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.header-right button:focus {
+  outline: none;
+}
+
+.header-username {
+  font-weight: 600;
+  color: #3C2F2F;
+}
+
+.header-auth-btn {
+  background: none;
+  border: none;
+  font-size: 15px;
+  color: #6c645a;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.header-auth-btn:hover {
+  color: #D65E18;
+}
+
+.header-divider {
+  color: #b3b1ae;
+}
+
+/* ===== 검색창 ===== */
+.header-search-wrap {
+  padding: 20px 0;
+}
+
+.search-box {
+  height: 50px;
+  max-width: 1300px;
+  width: 100%;
+  margin: 0 auto;
+  border: 1px solid #e2d7c8;
+  border-radius: 25px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: none;
+  font-size: 16px;
+  padding-right: 40px;
+  color: #000000;
+}
+
+.search-input::placeholder {
+  color: #b3b1ae;
+}
+
+.search-input:focus {
+  outline: none;
+}
+
+.search-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 20px;
+}
+
+.search-btn:focus {
+  outline: none;
+}
+
+.search-icon {
+  width: 20px;
+  height: 20px;
+  color: #b7a896;
+}
+
+/* ===== 서재 히어로 섹션 ===== */
+.library-hero {
+  background: #fffbf6;
+  padding: 80px 0 60px;
+}
+
+.library-hero-title {
+  font-size: 42px;
+  font-weight: 700;
+  color: #3C2F2F;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.library-hero-sub {
+  font-size: 18px;
+  color: #7b6f64;
+  text-align: center;
+}
+
+/* ===== 섹션 공통 ===== */
+.section {
+  padding: 80px 0;
+}
+
+.section-white {
+  background: #fffbf6;
+}
+
+.section-gray {
+  background: #fffbf6;
+}
+
+.section-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+.section-icon-img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  transform: translateY(5px);
+}
+
+.section-title {
+  font-size: 25px;
+  font-weight: 800;
+  color: #3b3128;
+  margin-right: 15px;
+}
+
+.section-sub {
+  font-size: 15px;
+  font-weight: 500;
+  color: #7b6f64;
+}
+
+/* ===== 책 목록 컨트롤 ===== */
+.book-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.book-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.book-tab {
+  padding: 10px 20px;
+  background: #ffffff;
+  border: 1px solid #e2d7c8;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #7b6f64;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.book-tab:hover {
+  border-color: #D65E18;
+  color: #D65E18;
+}
+
+.book-tab.active {
+  background: #D65E18;
+  border-color: #D65E18;
+  color: #fff;
+  font-weight: 600;
+}
+
+.tab-count {
+  font-size: 12px;
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+}
+
+.book-tab.active .tab-count {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.book-sort {
+  display: flex;
+  align-items: center;
+}
+
+.sort-select {
+  padding: 10px 16px;
+  border: 1px solid #e2d7c8;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #7b6f64;
+  background: #fff;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.sort-select:hover,
+.sort-select:focus {
+  border-color: #D65E18;
+}
+
+/* ===== 내 책 그리드 ===== */
+.mybook-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 32px;
+  margin-bottom: 60px;
+}
+
+.mybook-item {
+  cursor: pointer;
+  transition: transform 0.25s ease;
+}
+
+.mybook-item:hover {
+  transform: translateY(-8px);
+}
+
+.mybook-img-wrap {
+  position: relative;
+  width: 100%;
+  padding-top: 140%;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(161, 136, 118, 0.18);
+  margin-bottom: 12px;
+  transition: box-shadow 0.25s ease;
+}
+
+.mybook-item:hover .mybook-img-wrap {
+  box-shadow: 0 12px 28px rgba(161, 136, 118, 0.28);
+}
+
+.mybook-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.book-status-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.status-want {
+  background: #FFB366;
+}
+
+.status-reading {
+  background: #FF8533;
+}
+
+.status-done {
+  background: #D65E18;
+}
+
+.mybook-info {
+  text-align: center;
+}
+
+.mybook-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #3C2F2F;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
+}
+
+.mybook-author {
+  font-size: 13px;
+  color: #7b6f64;
+}
+
+/* ===== 통계 그리드 ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 32px;
+}
+
+.stat-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 6px 16px rgba(161, 136, 118, 0.12);
+  border: 1px solid #ebe3d7;
+}
+
+.stat-card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #3C2F2F;
+  margin-bottom: 8px;
+}
+
+.stat-card-sub {
+  font-size: 14px;
+  color: #7b6f64;
+  margin-bottom: 24px;
+}
+
+/* ===== 이달의 목표 ===== */
+.goal-content {
+  padding-top: 8px;
+}
+
+.goal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.goal-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: #3C2F2F;
+}
+
+.goal-edit-btn {
+  padding: 6px 16px;
+  background: #ffffff;
+  border: 1px solid #e2d7c8;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #7b6f64;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.goal-edit-btn:hover {
+  border-color: #D65E18;
+  color: #D65E18;
+}
+
+.goal-edit-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.goal-input {
+  width: 70px;
+  padding: 6px 12px;
+  border: 1px solid #e2d7c8;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+  outline: none;
+}
+
+.goal-input:focus {
+  border-color: #D65E18;
+}
+
+.goal-save-btn {
+  padding: 6px 16px;
+  background: #D65E18;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #fff;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.goal-save-btn:hover {
+  background: #c24d10;
+}
+
+.goal-cancel-btn {
+  padding: 6px 16px;
+  background: #ffffff;
+  border: 1px solid #e2d7c8;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #7b6f64;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.goal-cancel-btn:hover {
+  border-color: #999;
+  color: #3C2F2F;
+}
+
+.goal-progress-wrap {
+  margin-bottom: 12px;
+}
+
+.goal-progress-bar {
+  width: 100%;
+  height: 12px;
+  background: #f1e5d8;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.goal-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FF8533 0%, #D65E18 100%);
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.goal-progress-text {
+  font-size: 14px;
+  color: #7b6f64;
+  text-align: center;
+}
+
+.goal-complete-msg {
+  margin-top: 12px;
+  padding: 12px;
+  background: #ffe9d2;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #D65E18;
+  text-align: center;
+}
+
+/* ===== 월별 독서량 차트 ===== */
+.monthly-chart {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 200px;
+  gap: 12px;
+  padding-top: 20px;
+}
+
+.chart-bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.chart-bar-container {
+  width: 100%;
+  height: 160px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.chart-bar {
+  width: 100%;
+  max-width: 50px;
+  background: linear-gradient(180deg, #FF8533 0%, #D65E18 100%);
+  border-radius: 6px 6px 0 0;
+  position: relative;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 8px;
+  min-height: 40px;
+}
+
+.chart-bar:hover {
+  opacity: 0.8;
+  transform: scaleY(1.05);
+}
+
+.chart-bar-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.chart-bar-label {
+  font-size: 13px;
+  color: #7b6f64;
+  font-weight: 500;
+}
+
+/* ===== 파이 차트 ===== */
+.pie-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  padding-top: 8px;
+}
+
+.pie-chart-wrap {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  flex-shrink: 0;
+}
+
+.pie-chart {
+  width: 100%;
+  height: 100%;
+}
+
+.pie-center-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.pie-center-number {
+  font-size: 28px;
+  font-weight: 700;
+  color: #3C2F2F;
+  line-height: 1;
+}
+
+.pie-center-label {
+  font-size: 13px;
+  color: #7b6f64;
+  margin-top: 4px;
+}
+
+.pie-legend {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.legend-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.legend-text {
+  font-size: 14px;
+  color: #3C2F2F;
+  font-weight: 600;
+}
+
+/* ===== 저장한 문장 그리드 ===== */
+.saved-quotes-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 60px;
+}
+
+.quote-card-saved {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 16px 16px 8px;
+  box-shadow: 0 4px 10px rgba(161, 136, 118, 0.1);
+  border: 1px solid #ebe3d7;
+  transition: all 0.2s;
+  height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.quote-card-saved:hover {
+  box-shadow: 0 8px 20px rgba(161, 136, 118, 0.18);
+  transform: translateY(-2px);
+}
+
+.quote-top {
+  display: flex;
+  align-items: center;
+}
+
+.quote-writer {
+  font-size: 12px;
+  font-weight: 700;
+  color: #D65E18;
+}
+
+.quote-text {
+  margin: 8px 0 10px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #3C2F2F;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.quote-book {
+  font-size: 12px;
+  color: #3C2F2F;
+  display: flex;
+  gap: 6px;
+  margin-top: -10px;
+  align-items: center;
+}
+
+.quote-book-title {
+  font-weight: 500;
+  color: #7b6f64;
+}
+
+.quote-book-author {
+  color: #7b6f64;
+  font-weight: 500;
+}
+
+.quote-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  gap: 28px;
+  border-top: 1px solid #f1e5d8;
+}
+
+.quote-action-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 64px;
+  text-align: center;
+  font-size: 15px;
+  color: #3C2F2F;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.quote-action-item:focus,
+.quote-action-item:active {
+  outline: none;
+  box-shadow: none;
+}
+
+.meta-icon,
+.heart-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  transform: translateY(1px);
+}
+
+.like-btn.liked {
+  color: #D65E18;
+}
+
+.save-btn.saved {
+  color: #D65E18;
+}
+
+/* ===== 더보기 버튼 ===== */
+.quote-more-btn {
+  margin-top: 14px;
+  font-size: 13px;
+  color: #7b6f64;
+  text-align: right;
+  cursor: pointer;
+  margin-bottom: -50px;
+}
+
+.quote-more-btn:hover {
+  color: #D65E18;
+}
+
+/* ===== FOOTER ===== */
+.mylibrary-footer {
+  background: #fffbf6;
+  color: #7b6f64;
+  padding: 40px 0;
+  margin-top: 32px;
+}
+
+.footer-inner {
+  text-align: center;
+}
+
+.footer-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.footer-sub {
+  font-size: 11px;
+  color: #7b6f64;
+}
+
+/* ===== 카드 공통 ===== */
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* ===== 반응형 ===== */
+@media (max-width: 768px) {
+  .mylibrary-container {
+    padding: 0 16px;
+  }
+
+  .header-inner {
+    height: 60px;
+  }
+
+  .header-left {
+    gap: 16px;
+  }
+
+  .header-menu {
+    font-size: 14px;
+  }
+
+  .library-hero {
+    padding: 40px 0 30px;
+  }
+
+  .library-hero-title {
+    font-size: 26px;
+  }
+
+  .library-hero-sub {
+    font-size: 14px;
+  }
+
+  .section {
+    padding: 50px 0;
+  }
+
+  .section-title {
+    font-size: 22px;
+  }
+
+  .book-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .mybook-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .monthly-chart {
+    height: 180px;
+    gap: 8px;
+  }
+
+  .chart-bar-container {
+    height: 140px;
+  }
+
+  .pie-content {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .saved-quotes-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}

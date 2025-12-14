@@ -13,37 +13,54 @@ export default function Login() {
     const [user, setUser] = useState(null);
     const [nickname, setNickname] = useState("");
     const [step, setStep] = useState("login");
-
+    const [checkingAuth, setCheckingAuth] = useState(true);
 
     useEffect(() => {
         const loadUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
+            try {
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-            setUser(user);
+                if (userError || !user) {
+                    setCheckingAuth(false);
+                    return;
+                }
 
-            const { data: profile } = await supabase
-                .from("profiles")
-                .select("nickname")
-                .eq("id", user.id)
-                .single();
+                setUser(user);
 
-            if (!profile?.nickname) {
-                setStep("nickname");
-            } else {
-                navigate("/");
+                // profiles 테이블에서 닉네임 확인
+                const { data: profile, error: profileError } = await supabase
+                    .from("profiles")
+                    .select("nickname")
+                    .eq("id", user.id)
+                    .single();
+
+                if (profileError || !profile || !profile.nickname) {
+                    // 닉네임이 없으면 닉네임 설정 단계로
+                    console.log("닉네임 미설정 → 닉네임 입력 단계");
+                    setStep("nickname");
+                } else {
+                    // 닉네임이 있으면 홈으로
+                    console.log("이미 로그인된 사용자:", profile.nickname);
+                    navigate("/");
+                }
+            } catch (err) {
+                console.error("사용자 로드 중 오류:", err);
+            } finally {
+                setCheckingAuth(false);
             }
         };
 
         loadUser();
 
-        const { data: { subscription } } =
-            supabase.auth.onAuthStateChange(() => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            console.log("Auth 상태 변경:", event);
+            if (event === 'SIGNED_IN') {
                 loadUser();
-            });
+            }
+        });
 
         return () => subscription.unsubscribe();
-    }, []);
+    }, [navigate]);
 
 
     async function handleLogin(e) {
@@ -73,7 +90,7 @@ export default function Login() {
         const { error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-                redirectTo: window.location.origin
+                redirectTo: `${window.location.origin}/auth/callback`
             },
         });
 
@@ -81,7 +98,15 @@ export default function Login() {
             setErrorMsg("구글 로그인 중 오류가 발생했습니다.");
         }
     }
-
+    if (checkingAuth) {
+        return (
+            <div className="auth-wrapper">
+                <div className="auth-card">
+                    <h1 className="auth-title">로딩 중...</h1>
+                </div>
+            </div>
+        );
+    }
     return (
         <div className="auth-wrapper">
             <div className="auth-card">
@@ -157,19 +182,39 @@ export default function Login() {
                                     return;
                                 }
 
+                                setLoading(true);
+                                setErrorMsg("");
+
                                 try {
-                                    await supabase.auth.updateUser({
-                                        data: { nickname, full_name: nickname },
+                                    // 1. auth.users의 user_metadata 업데이트
+                                    const { error: updateError } = await supabase.auth.updateUser({
+                                        data: {
+                                            nickname: nickname.trim(),
+                                            full_name: nickname.trim()
+                                        },
                                     });
 
-                                    await supabase.from("profiles").upsert({
-                                        id: user.id,
-                                        nickname,
-                                    });
+                                    if (updateError) throw updateError;
 
+                                    // 2. profiles 테이블에 저장/업데이트
+                                    const { error: upsertError } = await supabase
+                                        .from("profiles")
+                                        .upsert({
+                                            id: user.id,
+                                            nickname: nickname.trim(),
+                                        }, {
+                                            onConflict: 'id'
+                                        });
+
+                                    if (upsertError) throw upsertError;
+
+                                    console.log("닉네임 저장 완료:", nickname.trim());
                                     navigate("/");
-                                } catch {
+                                } catch (err) {
+                                    console.error("닉네임 저장 오류:", err);
                                     setErrorMsg("닉네임 저장 중 오류가 발생했습니다.");
+                                } finally {
+                                    setLoading(false);
                                 }
                             }}
                         >

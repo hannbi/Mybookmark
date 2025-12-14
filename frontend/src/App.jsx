@@ -8,6 +8,7 @@ import Register from "./pages/Register";
 import ResetPassword from "./pages/ResetPassword";
 import UpdatePassword from "./pages/UpdatePassword";
 import AuthCallback from "./pages/AuthCallback";
+import MyLibrary from "./pages/MyLibrary";
 
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/update-password" element={<UpdatePassword />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/mylibrary" element={<MyLibrary />} /> 
       </Routes>
     </BrowserRouter>
   );
