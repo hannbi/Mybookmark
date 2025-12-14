@@ -21,22 +21,46 @@ import supabase from "../lib/supabaseClient";
 export default function BookDetail() {
     const { state } = useLocation();
     const navigate = useNavigate();
-    const book = state?.book;
+    const bookId = state?.bookId;
+
+    const [book, setBook] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(null);
+    const [nickname, setNickname] = useState("");
 
     const [showDropdown, setShowDropdown] = useState(false);
-
-
     const [reviewLike, setReviewLike] = useState({});
     const [reviewDislike, setReviewDislike] = useState({});
     const [quoteLike, setQuoteLike] = useState({});
     const [quoteSave, setQuoteSave] = useState({});
 
-    if (!book) {
-        return <div className="detail-empty">책 정보가 없습니다.</div>;
-    }
 
-    const [user, setUser] = useState(null);
-    const [nickname, setNickname] = useState("");
+    useEffect(() => {
+        if (!bookId) {
+            setLoading(false);
+            return;
+        }
+
+        const fetchBook = async () => {
+            const { data, error } = await supabase
+                .from("books")
+                .select("*")
+                .eq("id", bookId)
+                .single();
+
+            if (error) {
+                console.error("책 조회 실패", error);
+                setLoading(false);
+                return;
+            }
+
+            setBook(data);
+            setLoading(false);
+        };
+
+        fetchBook();
+    }, [bookId]);
+
 
     useEffect(() => {
         let mounted = true;
@@ -75,6 +99,54 @@ export default function BookDetail() {
             subscription.unsubscribe();
         };
     }, []);
+
+    if (loading) {
+        return <div className="detail-empty">불러오는 중...</div>;
+    }
+
+    if (!book) {
+        return <div className="detail-empty">책 정보가 없습니다.</div>;
+    }
+    
+    const saveToLibrary = async (status) => {
+        if (!user) {
+            alert("로그인이 필요합니다");
+            navigate("/login");
+            return;
+        }
+
+        const payload = {
+            user_id: user.id,
+            book_id: book.id,
+            status,
+        };
+
+        if (status === "reading") {
+            payload.started_at = new Date().toISOString().slice(0, 10);
+        }
+
+        if (status === "done") {
+            const today = new Date().toISOString().slice(0, 10);
+            payload.started_at = today;
+            payload.finished_at = today;
+        }
+
+        const { error } = await supabase
+            .from("user_books")
+            .upsert(payload, {
+                onConflict: "user_id,book_id",
+            });
+
+        if (error) {
+            console.error(error);
+            alert("서재 저장 실패");
+            return;
+        }
+
+        navigate("/mylibrary");
+    };
+
+
     // 더미 리뷰 데이터
     const reviewList = [
         {
@@ -225,7 +297,12 @@ export default function BookDetail() {
 
                         {/* ===== ACTION BUTTONS ===== */}
                         <div className="detail-buttons">
-                            <button className="btn-primary">읽고 싶은 책</button>
+                            <button
+                                className="btn-primary"
+                                onClick={() => saveToLibrary("want")}
+                            >
+                                읽고 싶은 책
+                            </button>
 
                             <div className="library-dropdown">
                                 <button
@@ -238,8 +315,8 @@ export default function BookDetail() {
 
                                 {showDropdown && (
                                     <div className="dropdown-menu">
-                                        <button>읽는 중</button>
-                                        <button>다 읽음</button>
+                                        <button onClick={() => saveToLibrary("reading")}>읽는 중</button>
+                                        <button onClick={() => saveToLibrary("done")}>다 읽음</button>
                                     </div>
                                 )}
                             </div>
