@@ -8,8 +8,6 @@ import { useNavigate } from "react-router-dom";
 import LogoImg from "../assets/logo.png";
 import book1 from "../assets/bestbook1.png";
 import book2 from "../assets/bestbook2.png";
-import book3 from "../assets/bestbook3.png";
-import book4 from "../assets/bestbook4.png";
 import goodIcon from "../assets/good_icon.png";
 import goodIconOrange from "../assets/good_icon_orange.png";
 import bookIcon from "../assets/book_icon.png";
@@ -21,9 +19,28 @@ import fillHeart from "../assets/fillheart.png";
 import blankSave from "../assets/blanksave.png";
 import fillSave from "../assets/fillsave.png";
 
+import supabase from "../lib/supabaseClient";
+
+
 export default function Home() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // 최초 로드 시 유저
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
+
+    // 로그인 / 로그아웃 감지
+    const { data: { subscription } } =
+      supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user ?? null);
+      });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   /* Best Sellers API*/
   const [bestsellers, setBestsellers] = useState([]);
@@ -298,9 +315,41 @@ export default function Home() {
 
           {/* 우측 사용자 */}
           <div className="header-right">
-            <User className="header-user-icon" />
-            <span>한비 님</span>
+            {!user ? (
+              <>
+                <button
+                  className="header-auth-btn"
+                  onClick={() => navigate("/login")}
+                >
+                  로그인
+                </button>
+                <span className="header-divider"> / </span>
+                <button
+                  className="header-auth-btn"
+                  onClick={() => navigate("/register")}
+                >
+                  회원가입
+                </button>
+              </>
+            ) : (
+              <>
+                <User size={18} />
+                <span className="header-username">
+                  {user.user_metadata?.full_name || user.email}
+                </span>
+                <button
+                  className="header-auth-btn"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                  }}
+                >
+                  로그아웃
+                </button>
+              </>
+            )}
           </div>
+
+
         </div>
 
         {/* 검색창 */}
@@ -635,7 +684,7 @@ export default function Home() {
 
 
         {/* ===== 이번주 신간 ===== */}
-        < section className="section section-gray" >
+        <section className="section section-gray">
           <div className="home-container">
             <div className="section-title-row">
               <span className="section-emoji">✨</span>
@@ -682,11 +731,11 @@ export default function Home() {
 
 
           </div>
-        </section >
-      </main >
+        </section>
+      </main>
 
       {/* ===== FOOTER ===== */}
-      < footer className="home-footer" >
+      <footer className="home-footer">
         <div className="home-container footer-inner">
           <p className="footer-title">My Bookmark</p>
           <p className="footer-sub">
@@ -694,6 +743,6 @@ export default function Home() {
           </p>
         </div>
       </footer >
-    </div >
+    </div>
   );
 }

@@ -82,7 +82,22 @@ body {
     font-size: 15px;
     color: #6c645a;
 }
+.header-right button {
+  background: none;
+  border: none;
+  outline: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
 
+.header-right button:focus {
+  outline: none;
+}
+
+.header-right button:active {
+  outline: none;
+}
 
 .header-user-icon {
     width: 15px;
