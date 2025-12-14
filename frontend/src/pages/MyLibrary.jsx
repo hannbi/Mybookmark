@@ -15,6 +15,7 @@ import blankSave from "../assets/blanksave.png";
 import fillSave from "../assets/fillsave.png";
 
 import supabase from "../lib/supabaseClient";
+import RecordModal from "../components/RecordModal";
 
 export default function MyLibrary() {
     const navigate = useNavigate();
@@ -22,6 +23,9 @@ export default function MyLibrary() {
     const [user, setUser] = useState(null);
     const [nickname, setNickname] = useState("");
     const [myBooks, setMyBooks] = useState([]);
+
+    const [showRecordModal, setShowRecordModal] = useState(false);
+    const [selectedBook, setSelectedBook] = useState(null);
 
     // 책 필터링 상태
     const [selectedTab, setSelectedTab] = useState("all"); // all, want, reading, done
@@ -434,6 +438,18 @@ export default function MyLibrary() {
                                         <p className="mybook-title">{book.title}</p>
                                         <p className="mybook-author">{book.author}</p>
                                     </div>
+                                    {book.status === "done" && (
+                                        <button
+                                            className="record-btn"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedBook(book);
+                                                setShowRecordModal(true);
+                                            }}
+                                        >
+                                            기록하기
+                                        </button>
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -663,6 +679,13 @@ export default function MyLibrary() {
                 </section>
 
             </main>
+
+            {showRecordModal && (
+                <RecordModal
+                    book={selectedBook}
+                    onClose={() => setShowRecordModal(false)}
+                />
+            )}
 
             {/* ===== FOOTER ===== */}
             <footer className="mylibrary-footer">

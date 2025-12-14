@@ -234,6 +234,7 @@
     color: #3b3128;
     margin-right: 15px;
 }
+
 .section-title-row2 {
     display: flex;
     align-items: baseline;
@@ -418,7 +419,30 @@
     font-size: 13px;
     color: #7b6f64;
 }
+/* ===== 기록하기 버튼 ===== */
+.record-btn {
+    all: unset;
+    margin: 10px auto 0;
+    display: block;
 
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+
+    background: transparent;
+    color: #D65E18;
+
+    border: 1px solid #c5c2c2;
+    border-radius: 6px;
+
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.record-btn:hover {
+    border-color: #D65E18;
+    background: #fff4ec;
+}
 /* ===== 통계 그리드 ===== */
 .stats-grid {
     display: grid;
@@ -942,4 +966,5 @@
         grid-template-columns: 1fr;
         gap: 16px;
     }
+
 }
