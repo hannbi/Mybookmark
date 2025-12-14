@@ -26,6 +26,9 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [user, setUser] = useState(null);
   const [nickname, setNickname] = useState("");
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [activeQuote, setActiveQuote] = useState(null);
+
 
   useEffect(() => {
     let mounted = true;
@@ -68,6 +71,7 @@ export default function Home() {
 
   /* Best Sellers API*/
   const [bestsellers, setBestsellers] = useState([]);
+  const topReviewBooks = bestsellers.slice(5, 10);
   useEffect(() => {
     fetch("http://localhost:3000/api/books/bestsellers")
       .then((res) => res.json())
@@ -452,7 +456,7 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            
+
           </div>
         </section>
 
@@ -474,41 +478,66 @@ export default function Home() {
               onMouseUp={handleMouseUp}
               onMouseMove={handleMouseMove}
             >
-              {reviews.map((review, idx) => (
+              {topReviewBooks.map((book, idx) => (
                 <div
-                  key={idx}
-                  className={`card review-carousel-card ${selectedReview === idx ? "selected" : ""
-                    }`}
+                  key={book.id}
+                  className={`card review-carousel-card ${selectedReview === idx ? "selected" : ""}`}
                   onClick={() => {
                     setSelectedReview(idx);
                     scrollToCard(idx);
+                    navigate("/book", { state: { bookId: book.id } });
                   }}
                 >
                   <div className="review-carousel-content">
                     <div className="review-left">
-                      <p className="review-carousel-title">{review.bookTitle}</p>
-                      <p className="review-carousel-author">{review.author}</p>
+                      <p className="review-carousel-title">{book.title}</p>
+                      <p className="review-carousel-author">{book.author}</p>
                       <div className="review-divider"></div>
-                      <p className="review-carousel-text">" {review.review} "</p>
+
+                      {/* 더미 리뷰 */}
+                      <p className="review-carousel-text">
+                        “독자들에게 특히 많은 공감을 받은 책입니다.”
+                      </p>
+
                       <div className="review-like-section">
                         <img src={goodIconOrange} alt="like" className="like-icon" />
-                        <span className="like-count">{review.likes}</span>
+                        <span className="like-count">{120 - idx * 7}</span>
                       </div>
+
                       <div className="review-carousel-buttons">
-                        <button className="btn-outline">리뷰 더보기</button>
-                        <button className="btn-primary">읽고 싶은 책</button>
+                        <button
+                          className="btn-outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate("/book", { state: { bookId: book.id } });
+                          }}
+                        >
+                          리뷰 더보기
+                        </button>
+
+                        <button
+                          className="btn-primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate("/mylibrary");
+                          }}
+                        >
+                          읽고 싶은 책
+                        </button>
                       </div>
                     </div>
+
                     <div className="review-right">
                       <img
-                        src={idx % 2 === 0 ? book1 : book2}
-                        alt="book"
+                        src={book.cover ?? book1}
+                        alt={book.title}
                         className="review-book-img-large"
                       />
                     </div>
                   </div>
                 </div>
               ))}
+
             </div>
 
             {/* 원형 인디케이터 */}
@@ -662,10 +691,17 @@ export default function Home() {
                     {/* 하단: 댓글 / 공감 / 저장 */}
                     <div className="quote-actions">
                       {/* 댓글 */}
-                      <div className="quote-action-item">
+                      <button
+                        type="button"
+                        className="quote-action-item"
+                        onClick={() => {
+                          setActiveQuote(item);
+                          setShowCommentModal(true);
+                        }}
+                      >
                         <img src={commentIcon} alt="댓글" className="meta-icon" />
                         <span>{item.comments}</span>
-                      </div>
+                      </button>
 
                       {/* 공감 */}
                       <button
@@ -756,6 +792,7 @@ export default function Home() {
           </div>
         </section>
       </main>
+      
 
       {/* ===== FOOTER ===== */}
       <footer className="home-footer">
@@ -766,6 +803,36 @@ export default function Home() {
           </p>
         </div>
       </footer >
+      {showCommentModal && activeQuote && (
+        <div className="modal-backdrop" onClick={() => setShowCommentModal(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h3>댓글</h3>
+
+            {/* 더미 댓글 */}
+            <div className="comment-list">
+              <p>📖 너무 공감돼요!</p>
+              <p>📖 이 문장 때문에 책 샀어요</p>
+              <p>📖 다시 읽어보고 싶네요</p>
+            </div>
+
+            {/* 입력 */}
+            <input
+              type="text"
+              placeholder="댓글을 입력하세요"
+              className="comment-input"
+            />
+
+            <div className="modal-actions">
+              <button className="btn-outline" onClick={() => setShowCommentModal(false)}>
+                닫기
+              </button>
+              <button className="btn-primary">등록</button>
+            </div>
+          </div>
+        </div>
+      )
+      }
     </div>
   );
+
 }
