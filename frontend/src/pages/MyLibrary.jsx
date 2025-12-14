@@ -412,7 +412,7 @@ export default function MyLibrary() {
                                     <button
                                         className="remove-btn"
                                         onClick={(e) => {
-                                            e.stopPropagation(); 
+                                            e.stopPropagation();
                                             removeFromLibrary(book.id);
                                         }}
                                     >
@@ -443,12 +443,19 @@ export default function MyLibrary() {
                 {/* ===== 독서 통계 섹션 ===== */}
                 <section className="section section-gray">
                     <div className="mylibrary-container">
+                        {/* 섹션 타이틀 추가 */}
+                        <div className="section-title-row2">
+                            <h2 className="section-title">📈 독서 통계 & 목표</h2>
+                            <span className="section-sub">
+                                목표 설정부터 독서 현황까지 한눈에 확인해보세요
+                            </span>
+                        </div>
                         <div className="stats-grid">
 
                             {/* 이달의 목표 */}
                             <div className="card stat-card">
                                 <h3 className="stat-card-title">이달의 목표</h3>
-                                <p className="stat-card-sub">12월 완독 목표를 설정하고 달성해보세요</p>
+                                <p className="stat-card-sub">이번달 완독 목표를 설정하고 달성해보세요</p>
 
                                 <div className="goal-content">
                                     <div className="goal-header">
@@ -591,11 +598,12 @@ export default function MyLibrary() {
                     </div>
                 </section>
 
+
                 {/* ===== 저장한 책 속 한 구절 ===== */}
                 <section className="section section-white">
                     <div className="mylibrary-container">
                         <div className="section-title-row">
-                            <h2 className="section-title">저장한 책 속 한 구절</h2>
+                            <h2 className="section-title">📖 저장한 책 속 한 구절</h2>
                             <span className="section-sub">
                                 마음에 담아둔 문장들을 모아봤어요
                             </span>
