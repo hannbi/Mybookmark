@@ -438,6 +438,19 @@
   color: #7b6f64;
   margin-bottom: 24px;
 }
+.remove-btn {
+  all: unset;
+  width: 24px;
+  height: 24px;
+  transform: translate(2px, -5px);
+  font-size: 12px;
+  border-radius: 50%;
+  background: rgba(139, 137, 136, 0.1);
+  color: #060505;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 /* ===== 이달의 목표 ===== */
 .goal-content {

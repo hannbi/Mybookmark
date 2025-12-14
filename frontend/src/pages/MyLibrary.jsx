@@ -72,6 +72,24 @@ export default function MyLibrary() {
         };
     }, []);
 
+    const removeFromLibrary = async (bookId) => {
+        if (!user) return;
+
+        const { error } = await supabase
+            .from("user_books")
+            .delete()
+            .eq("user_id", user.id)
+            .eq("book_id", bookId);
+
+        if (error) {
+            console.error("삭제 실패", error);
+            alert("서재에서 삭제 실패");
+            return;
+        }
+
+        setMyBooks(prev => prev.filter(b => b.id !== bookId));
+    };
+
     // 월별 독서량 데이터 (최근 6개월)
     const monthlyReadingData = [
         { month: "7월", count: 4 },
@@ -391,6 +409,15 @@ export default function MyLibrary() {
                                     className="mybook-item"
                                     onClick={() => navigate("/book", { state: { bookId: book.id } })}
                                 >
+                                    <button
+                                        className="remove-btn"
+                                        onClick={(e) => {
+                                            e.stopPropagation(); 
+                                            removeFromLibrary(book.id);
+                                        }}
+                                    >
+                                        ✕
+                                    </button>
                                     <div className="mybook-img-wrap">
                                         <img
                                             src={book.cover}
