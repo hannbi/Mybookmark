@@ -20,7 +20,12 @@
   padding: 25px 40px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
 }
-
+.auth-desc {
+  text-align: center;
+  font-size: 14px;
+  color: #7b6f64;
+  margin-bottom: 20px;
+}
 .auth-title {
   font-size: 25px;
   font-weight: 800;

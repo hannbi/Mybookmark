@@ -21,26 +21,50 @@ import fillSave from "../assets/fillsave.png";
 
 import supabase from "../lib/supabaseClient";
 
-
 export default function Home() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [user, setUser] = useState(null);
+  const [nickname, setNickname] = useState("");
 
   useEffect(() => {
-    // 최초 로드 시 유저
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-    });
+    let mounted = true;
 
-    // 로그인 / 로그아웃 감지
+    const loadUser = async () => {
+      if (!mounted) return;
+
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      if (!user) {
+        setNickname("");
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("nickname")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profile?.nickname) {
+        setNickname(profile.nickname);
+      } 
+    };
+
+    loadUser();
+
     const { data: { subscription } } =
-      supabase.auth.onAuthStateChange((_event, session) => {
-        setUser(session?.user ?? null);
+      supabase.auth.onAuthStateChange(() => {
+        loadUser();
       });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
+
+
 
   /* Best Sellers API*/
   const [bestsellers, setBestsellers] = useState([]);
@@ -335,15 +359,17 @@ export default function Home() {
               <>
                 <User size={18} />
                 <span className="header-username">
-                  {user.user_metadata?.full_name || user.email}
+                  {nickname || "사용자"} 님
                 </span>
                 <button
                   className="header-auth-btn"
                   onClick={async () => {
                     await supabase.auth.signOut();
+                    setUser(null);
+                    setNickname("");
                   }}
                 >
-                  로그아웃
+                  | 로그아웃
                 </button>
               </>
             )}

@@ -44,7 +44,7 @@ export default function ResetPassword() {
           />
 
           <button className="auth-btn" type="submit" disabled={loading}>
-            {loading ? "전송 중..." : "재설정 메일 보내기"}
+            {loading ? "전송 중..." : "비밀번호 재설정 메일 전송"}
           </button>
         </form>
 
