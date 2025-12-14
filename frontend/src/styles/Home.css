@@ -258,7 +258,7 @@ body {
     display: flex;
     justify-content: center;
     gap: 120px;
-    margin: 90px 20px;
+    margin: 80px 20px;
 }
 
 /* ===== 카드 하나 ===== */
@@ -297,19 +297,19 @@ body {
 
 /* 지그재그 위치 */
 .zigzag-1 {
-    transform: translateY(-25px) !important;
+    transform: translateY(-20px) !important;
 }
 
 .zigzag-2 {
-    transform: translateY(35px) !important;
+    transform: translateY(40px) !important;
 }
 
 .zigzag-3 {
-    transform: translateY(-25px) !important;
+    transform: translateY(-20px) !important;
 }
 
 .zigzag-4 {
-    transform: translateY(35px) !important;
+    transform: translateY(40px) !important;
 }
 
 /* ===== 아래쪽 책 제목/저자 ===== */
@@ -348,29 +348,6 @@ body {
     transform: translateY(20px);
 }
 
-
-/* 더보기 버튼 */
-.weekly-more-wrap {
-    text-align: center;
-    margin-top: 5px;
-    margin-bottom: -45px;
-}
-
-.weekly-more-btn {
-    padding: 8px 20px;
-    border-radius: 999px;
-    border: 1px solid #fffbf6;
-    background: #7b6f64;
-    font-size: 15px;
-    font-weight: 500;
-    color: #fffbf6;
-    transform: translateY(-40px);
-    cursor: pointer;
-}
-
-.weekly-more-btn:hover {
-    background: #5e5349;
-}
 
 /* ===== 공감 많은 리뷰 / 공통 섹션 ===== */
 .section-icon-img {

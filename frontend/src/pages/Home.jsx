@@ -452,12 +452,7 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            {/* 더보기 버튼 */}
-            <div className="weekly-more-wrap">
-              <button className="weekly-more-btn">
-                VIEW ALL
-              </button>
-            </div>
+            
           </div>
         </section>
 
