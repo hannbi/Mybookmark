@@ -48,7 +48,7 @@ export default function Home() {
 
       if (profile?.nickname) {
         setNickname(profile.nickname);
-      }
+      } 
     };
 
     loadUser();
@@ -92,33 +92,7 @@ export default function Home() {
       });
   }, []);
 
-  const saveToLibrary = async (bookId, status = "want") => {
-    if (!user) {
-      alert("로그인이 필요합니다");
-      navigate("/login");
-      return;
-    }
 
-    const payload = {
-      user_id: user.id,
-      book_id: bookId,
-      status,
-    };
-
-    const { error } = await supabase
-      .from("user_books")
-      .upsert(payload, {
-        onConflict: "user_id,book_id",
-      });
-
-    if (error) {
-      console.error(error);
-      alert("서재 저장 실패");
-      return;
-    }
-
-    navigate("/mylibrary");
-  };
 
   const quoteList = [
     {
@@ -354,9 +328,7 @@ export default function Home() {
           {/* 좌측 메뉴 */}
           <nav className="header-left">
             <button className="header-menu">Home</button>
-            <button className="header-menu" onClick={() => navigate("/mylibrary")}>
-              My Library
-            </button>
+            <button className="header-menu">My Library</button>
           </nav>
 
           {/* 가운데 로고 */}
@@ -461,7 +433,7 @@ export default function Home() {
                 <div
                   key={book.id ?? idx}
                   className={`book-card zigzag-${idx + 1}`}
-                  onClick={() => navigate("/book", { state: { bookId: book.id } })}
+                  onClick={() => navigate("/book", { state: { book } })}
                 >
                   <div className="book-img-wrap">
                     <img
@@ -478,7 +450,8 @@ export default function Home() {
                 </div>
               ))}
             </div>
-
+            {/* 더보기 버튼 */}
+            
           </div>
         </section>
 
@@ -522,15 +495,7 @@ export default function Home() {
                       </div>
                       <div className="review-carousel-buttons">
                         <button className="btn-outline">리뷰 더보기</button>
-                        <button
-                          className="btn-primary"
-                          onClick={(e) => {
-                            e.stopPropagation(); // 카드 클릭 막기
-                            saveToLibrary(book.id, "want");
-                          }}
-                        >
-                          읽고 싶은 책
-                        </button>
+                        <button className="btn-primary">읽고 싶은 책</button>
                       </div>
                     </div>
                     <div className="review-right">
@@ -756,7 +721,7 @@ export default function Home() {
                 <div
                   key={idx}
                   className="newbook-item"
-                  onClick={() => navigate("/book", { state: { bookId: book.id } })}
+                  onClick={() => navigate("/book", { state: { book } })}
                 >
                   {/* 책 이미지 (흰 카드와 분리된 기준) */}
                   <div className="newbook-img-wrap">
@@ -777,15 +742,7 @@ export default function Home() {
 
                     <div className="newbook-buttons">
                       <button className="btn-outline">책 상세보기</button>
-                      <button
-                        className="btn-primary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          saveToLibrary(book.id, "want");
-                        }}
-                      >
-                        읽고 싶은 책
-                      </button>
+                      <button className="btn-primary">읽고 싶은 책</button>
                     </div>
                   </div>
 
