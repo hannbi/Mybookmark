@@ -669,17 +669,17 @@
 
 /* ===== 파이 차트 ===== */
 .pie-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 32px;
-    padding-top: -20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;   
+  gap: 48px;
+  margin-top: 20px;
 }
 
 .pie-chart-wrap {
     position: relative;
-    width: 170px;
-    height: 170px;
+    width: 180px;
+    height: 180px;
     flex-shrink: 0;
 }
 
@@ -699,13 +699,13 @@
 .pie-center-number {
     font-size: 28px;
     font-weight: 700;
-    color: #3C2F2F;
+    color: #fff7ef;
     line-height: 1;
 }
 
 .pie-center-label {
     font-size: 13px;
-    color: #7b6f64;
+    color: #fff7ef;
     margin-top: 4px;
 }
 
@@ -714,6 +714,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    transform: translateX(55px) translateY(-40px);
 }
 
 .legend-row {
@@ -723,14 +724,14 @@
 }
 
 .legend-dot {
-    width: 20px;
-    height: 20px;
+    width: 15px;
+    height: 15px;
     border-radius: 3px;
     flex-shrink: 0;
 }
 
 .legend-text {
-    font-size: 14px;
+    font-size: 16px;
     color: #3C2F2F;
     font-weight: 600;
 }
