@@ -52,6 +52,11 @@ body {
     color: #000;
 }
 
+.header-menu.active {
+    color: #D65E18;
+    font-weight: 600;
+}
+
 .header-logo {
     display: flex;
     align-items: center;

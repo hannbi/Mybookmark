@@ -409,7 +409,7 @@ export default function Home() {
         <div className="home-container header-inner">
           {/* 좌측 메뉴 */}
           <nav className="header-left">
-            <button className="header-menu">Home</button>
+            <button className="header-menu active">Home</button>
             <button className="header-menu" onClick={() => navigate("/mylibrary")}>
               My Library
             </button>
