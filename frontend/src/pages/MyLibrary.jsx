@@ -27,28 +27,62 @@ export default function MyLibrary() {
     const [showRecordModal, setShowRecordModal] = useState(false);
     const [selectedBook, setSelectedBook] = useState(null);
 
-    // 책 필터링 상태
-    const [selectedTab, setSelectedTab] = useState("all"); // all, want, reading, done
-    const [sortBy, setSortBy] = useState("recent"); // recent, title
+    const [selectedTab, setSelectedTab] = useState("all");
+    const [sortBy, setSortBy] = useState("recent");
 
-    // 이달의 목표
     const [monthlyGoal, setMonthlyGoal] = useState(5);
     const [isEditingGoal, setIsEditingGoal] = useState(false);
     const [tempGoal, setTempGoal] = useState(5);
-
-    // 저장한 문장 좋아요 상태
     const [likedMap, setLikedMap] = useState({});
-
-    // 저장한 책 속 한 구절
     const [savedQuotes, setSavedQuotes] = useState([]);
-
-    // 댓글 모달
     const [showCommentModal, setShowCommentModal] = useState(false);
     const [activeQuote, setActiveQuote] = useState(null);
     const [commentInput, setCommentInput] = useState("");
-
-    // 내가 작성한 댓글
     const [myComments, setMyComments] = useState([]);
+    const [myReviews, setMyReviews] = useState([]);
+    const [myQuotes, setMyQuotes] = useState([]);
+
+    /* 내가 작성한 리뷰 불러오기 */
+    const fetchMyReviews = async (userId) => {
+        const { data, error } = await supabase
+            .from("reviews")
+            .select(`
+      id,
+      content,
+      likes_count,
+      created_at,
+      books (
+        title,
+        author
+      )
+    `)
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false });
+
+        if (!error) setMyReviews(data);
+    };
+
+
+    /* 내가 작성한 책 속 한 문장*/
+    const fetchMyQuotes = async (userId) => {
+        const { data, error } = await supabase
+            .from("quotes")
+            .select(`
+      id,
+      content,
+      created_at,
+      books (
+        title,
+        author
+      ),
+      quote_likes ( id ),
+      quote_comments ( id )
+    `)
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false });
+
+        if (!error) setMyQuotes(data);
+    };
 
 
     useEffect(() => {
@@ -120,11 +154,12 @@ export default function MyLibrary() {
     useEffect(() => {
         let mounted = true;
 
-        const loadUser = async () => {
+        const loadUserAndData = async () => {
             if (!mounted) return;
 
             const { data: { user } } = await supabase.auth.getUser();
             setUser(user);
+
             if (!user) {
                 setNickname("");
                 return;
@@ -139,13 +174,16 @@ export default function MyLibrary() {
             if (profile?.nickname) {
                 setNickname(profile.nickname);
             }
+
+            fetchMyReviews(user.id);
+            fetchMyQuotes(user.id);
         };
 
-        loadUser();
+        loadUserAndData();
 
         const { data: { subscription } } =
             supabase.auth.onAuthStateChange(() => {
-                loadUser();
+                loadUserAndData();
             });
 
         return () => {
@@ -688,7 +726,7 @@ export default function MyLibrary() {
                 <section className="section section-white">
                     <div className="mylibrary-container">
                         <div className="section-title-row">
-                            <h2 className="section-title">📖 저장한 책 속 한 구절</h2>
+                            <h2 className="section-title">📖 저장한 책 속 한 문장</h2>
                             <span className="section-sub">
                                 마음에 담아둔 문장들을 모아봤어요
                             </span>
@@ -746,8 +784,34 @@ export default function MyLibrary() {
                                 );
                             })}
                         </div>
+                    </div>
+                </section>
 
-                        <div className="quote-more-btn">문장 더보기</div>
+                <section className="section section-white">
+                    <div className="mylibrary-container">
+                        <div className="section-title-row">
+                            <h2 className="section-title">📝 내가 작성한 책 속 한 문장</h2>
+                            <span className="section-sub">
+                                내가 직접 기록한 문장들이에요
+                            </span>
+                        </div>
+                        <div className="saved-quotes-grid">
+                            {myQuotes.map((q) => (
+                                <div key={q.id} className="card quote-card-saved">
+                                    <p className="quote-text">“{q.content}”</p>
+
+                                    <div className="quote-book">
+                                        <span>{q.books?.title}</span>
+                                        <span> | {q.books?.author}</span>
+                                    </div>
+
+                                    <div className="quote-actions">
+                                        <span>❤️ {q.quote_likes.length}</span>
+                                        <span>💬 {q.quote_comments.length}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </section>
 
@@ -779,43 +843,80 @@ export default function MyLibrary() {
                 </section>
 
 
-            </main>
-
-            {showRecordModal && (
-                <RecordModal
-                    book={selectedBook}
-                    onClose={() => setShowRecordModal(false)}
-                    onSaved={async () => {
-                        // 저장 후 "내 책 목록"만 다시 불러오기 (기존 로직 그대로 활용하고 싶으면 fetchMyBooks를 함수로 빼도 됨)
-                        // 여기서는 간단히 새로고침 대신, 네 방식에 맞게 추후 리팩토링 가능.
-                    }}
-                />
-            )}
-            {showCommentModal && activeQuote && (
-                <div className="modal-backdrop" onClick={() => setShowCommentModal(false)}>
-                    <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3>댓글 작성</h3>
-                            <button onClick={() => setShowCommentModal(false)}>✕</button>
+                <section className="section section-white">
+                    <div className="mylibrary-container">
+                        <div className="section-title-row">
+                            <h2 className="section-title">✍️ 내가 작성한 리뷰</h2>
+                            <span className="section-sub">
+                                책을 읽고 남긴 나의 생각들이에요
+                            </span>
                         </div>
 
-                        <input
-                            type="text"
-                            placeholder="댓글을 입력하세요"
-                            value={commentInput}
-                            onChange={(e) => setCommentInput(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") handleCommentSubmit();
-                            }}
-                            className="comment-input"
-                        />
+                        <div className="saved-quotes-grid">
+                            {myReviews.map((r) => (
+                                <div key={r.id} className="card quote-card-saved">
+                                    <p className="quote-text">{r.content}</p>
 
-                        <button className="comment-submit-btn" onClick={handleCommentSubmit}>
-                            등록
-                        </button>
+                                    <div className="quote-book">
+                                        <span>{r.books?.title}</span>
+                                        <span> | {r.books?.author}</span>
+                                    </div>
+
+                                    <div className="quote-actions">
+                                        <span>❤️ {r.likes_count}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            )}
+                </section>
+
+
+
+
+
+
+            </main>
+
+            {
+                showRecordModal && (
+                    <RecordModal
+                        book={selectedBook}
+                        onClose={() => setShowRecordModal(false)}
+                        onSaved={async () => {
+                            // 저장 후 "내 책 목록"만 다시 불러오기 (기존 로직 그대로 활용하고 싶으면 fetchMyBooks를 함수로 빼도 됨)
+                            // 여기서는 간단히 새로고침 대신, 네 방식에 맞게 추후 리팩토링 가능.
+                        }}
+                    />
+                )
+            }
+            {
+                showCommentModal && activeQuote && (
+                    <div className="modal-backdrop" onClick={() => setShowCommentModal(false)}>
+                        <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <h3>댓글 작성</h3>
+                                <button onClick={() => setShowCommentModal(false)}>✕</button>
+                            </div>
+
+                            <input
+                                type="text"
+                                placeholder="댓글을 입력하세요"
+                                value={commentInput}
+                                onChange={(e) => setCommentInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") handleCommentSubmit();
+                                }}
+                                className="comment-input"
+                            />
+
+                            <button className="comment-submit-btn" onClick={handleCommentSubmit}>
+                                등록
+                            </button>
+                        </div>
+                    </div>
+                )
+            }
 
             {/* ===== FOOTER ===== */}
             <footer className="mylibrary-footer">
@@ -826,6 +927,6 @@ export default function MyLibrary() {
                     </p>
                 </div>
             </footer>
-        </div>
+        </div >
     );
 }

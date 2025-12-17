@@ -32,6 +32,7 @@ export default function Home() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [quotes, setQuotes] = useState([]);
+  
 
   const showToastMessage = (message) => {
     setToastMessage(message);
@@ -107,7 +108,7 @@ export default function Home() {
         score: q.quote_likes.length + q.quote_comments.length
       }));
 
-      // 계산된 TOP 8 책 속 한구절
+      // 계산된 TOP 8 책 속 한문장
       const top8 = scored
         .sort((a, b) => b.score - a.score)
         .slice(0, 8);
@@ -738,7 +739,7 @@ export default function Home() {
           <div className="home-container">
             <div className="section-title-row">
               <img src={textIcon} alt="text" className="section-icon-img" />
-              <h2 className="section-title">책 속 한 구절</h2>
+              <h2 className="section-title">책 속 한 문장</h2>
               <span className="section-sub">
                 독자들이 인상 깊게 느낀 명문장들을 공유해요
               </span>
