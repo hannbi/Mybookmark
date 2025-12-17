@@ -39,6 +39,84 @@ export default function MyLibrary() {
     // 저장한 문장 좋아요 상태
     const [likedMap, setLikedMap] = useState({});
 
+    // 저장한 책 속 한 구절
+    const [savedQuotes, setSavedQuotes] = useState([]);
+
+    // 댓글 모달
+    const [showCommentModal, setShowCommentModal] = useState(false);
+    const [activeQuote, setActiveQuote] = useState(null);
+    const [commentInput, setCommentInput] = useState("");
+
+    // 내가 작성한 댓글
+    const [myComments, setMyComments] = useState([]);
+
+
+    useEffect(() => {
+        if (!user) return;
+
+        const fetchSavedQuotes = async () => {
+            const { data, error } = await supabase
+                .from("quote_likes")
+                .select(`
+        quote_id,
+        quotes (
+          id,
+          content,
+          books ( title, author ),
+          profiles ( nickname )
+        )
+      `)
+                .eq("user_id", user.id)
+                .order("created_at", { ascending: false });
+
+            if (error) {
+                console.error("저장한 문장 불러오기 실패", error);
+                return;
+            }
+
+            const formatted = data.map(row => ({
+                id: row.quotes.id,
+                quote: row.quotes.content,
+                book: row.quotes.books.title,
+                author: row.quotes.books.author,
+                user: row.quotes.profiles.nickname,
+            }));
+
+            setSavedQuotes(formatted);
+        };
+
+        fetchSavedQuotes();
+    }, [user]);
+
+
+    useEffect(() => {
+        if (!user) return;
+
+        const fetchMyComments = async () => {
+            const { data, error } = await supabase
+                .from("quote_comments")
+                .select(`
+        content,
+        created_at,
+        quotes (
+          content,
+          books ( title, author )
+        )
+      `)
+                .eq("user_id", user.id)
+                .order("created_at", { ascending: false });
+
+            if (error) {
+                console.error(error);
+                return;
+            }
+
+            setMyComments(data);
+        };
+
+        fetchMyComments();
+    }, [user]);
+
     useEffect(() => {
         let mounted = true;
 
@@ -104,36 +182,6 @@ export default function MyLibrary() {
         { month: "12월", count: 3 }
     ];
 
-    // 저장한 문장 데이터
-    const savedQuotes = [
-        {
-            id: 1,
-            user: "민수",
-            quote: "책의 깊이와 감동이 오래도록 남습니다.",
-            book: "문장의 온도",
-            author: "이기주",
-            comments: 12,
-            likes: 105,
-        },
-        {
-            id: 2,
-            user: "한비",
-            quote: "내 마음은 언제나 메마른 언덕이었다.",
-            book: "어른의 문장",
-            author: "김소연",
-            comments: 12,
-            likes: 103,
-        },
-        {
-            id: 3,
-            user: "수현",
-            quote: "사람의 마음은 쉽게 무너지지 않지만, 한 번 금이 가면 오래 남는다.",
-            book: "마음의 결",
-            author: "박지은",
-            comments: 8,
-            likes: 97,
-        }
-    ];
 
     // 책 필터링 및 정렬
     const getFilteredBooks = () => {
@@ -154,6 +202,27 @@ export default function MyLibrary() {
         }
 
         return filtered;
+    };
+
+    // 대글 작성 함수
+    const handleCommentSubmit = async () => {
+        if (!user || !activeQuote || !commentInput.trim()) return;
+
+        const { error } = await supabase
+            .from("quote_comments")
+            .insert({
+                user_id: user.id,
+                quote_id: activeQuote.id,
+                content: commentInput.trim(),
+            });
+
+        if (error) {
+            console.error("댓글 작성 실패", error);
+            return;
+        }
+
+        setCommentInput("");
+        setShowCommentModal(false);
     };
 
     // 상태별 개수 계산
@@ -643,10 +712,14 @@ export default function MyLibrary() {
                                         </div>
 
                                         <div className="quote-actions">
-                                            <div className="quote-action-item">
-                                                <img src={commentIcon} alt="댓글" className="meta-icon" />
-                                                <span>{item.comments}</span>
-                                            </div>
+                                            <button
+                                                type="button"
+                                                className="quote-action-item"
+                                                onClick={() => {
+                                                    setActiveQuote(item);
+                                                    setShowCommentModal(true);
+                                                }}
+                                            ></button>
 
                                             <button
                                                 type="button"
@@ -678,13 +751,70 @@ export default function MyLibrary() {
                     </div>
                 </section>
 
+
+                <section className="section section-white">
+                    <div className="mylibrary-container">
+                        <div className="section-title-row">
+                            <h2 className="section-title">💬 내가 작성한 댓글</h2>
+                            <span className="section-sub">내가 남긴 생각들을 모아봤어요</span>
+                        </div>
+
+                        <div className="saved-quotes-grid">
+                            {myComments.map((item, idx) => (
+                                <div key={idx} className="card quote-card-saved">
+                                    <p className="quote-text">"{item.content}"</p>
+
+                                    <div className="quote-book">
+                                        <span className="quote-book-title">
+                                            {item.quotes.books.title}
+                                        </span>
+                                        <span className="quote-book-author">
+                                            | {item.quotes.books.author}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+
             </main>
 
             {showRecordModal && (
                 <RecordModal
                     book={selectedBook}
                     onClose={() => setShowRecordModal(false)}
+                    onSaved={async () => {
+                        // 저장 후 "내 책 목록"만 다시 불러오기 (기존 로직 그대로 활용하고 싶으면 fetchMyBooks를 함수로 빼도 됨)
+                        // 여기서는 간단히 새로고침 대신, 네 방식에 맞게 추후 리팩토링 가능.
+                    }}
                 />
+            )}
+            {showCommentModal && activeQuote && (
+                <div className="modal-backdrop" onClick={() => setShowCommentModal(false)}>
+                    <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>댓글 작성</h3>
+                            <button onClick={() => setShowCommentModal(false)}>✕</button>
+                        </div>
+
+                        <input
+                            type="text"
+                            placeholder="댓글을 입력하세요"
+                            value={commentInput}
+                            onChange={(e) => setCommentInput(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") handleCommentSubmit();
+                            }}
+                            className="comment-input"
+                        />
+
+                        <button className="comment-submit-btn" onClick={handleCommentSubmit}>
+                            등록
+                        </button>
+                    </div>
+                </div>
             )}
 
             {/* ===== FOOTER ===== */}

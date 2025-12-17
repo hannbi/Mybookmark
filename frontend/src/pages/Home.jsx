@@ -141,7 +141,34 @@ export default function Home() {
       });
   }, []);
 
+  // 2. 댓글 작성 함수
+  const handleCommentSubmit = async () => {
+    if (!user) {
+      alert("로그인이 필요합니다");
+      navigate("/login");
+      return;
+    }
 
+    if (!commentInput.trim()) return;
+
+    const { error } = await supabase
+      .from("quote_comments")
+      .insert({
+        user_id: user.id,
+        quote_id: activeQuote.id,
+        content: commentInput.trim(),
+      });
+
+    if (error) {
+      console.error("댓글 등록 실패", error);
+      alert("댓글 등록에 실패했습니다");
+      return;
+    }
+
+    showToastMessage("댓글이 등록되었습니다");
+    setCommentInput("");
+    // 실시간으로 댓글을 추가하려면 dummyComments를 state로 변경하고 여기서 업데이트
+  };
 
   const quoteList = [
     {
@@ -281,11 +308,47 @@ export default function Home() {
       [id]: !prev[id],
     }));
   };
-  const toggleSave = (id) => {
-    setSavedMap((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
+  const handleQuoteSave = async (quoteId) => {
+    if (!user) {
+      alert("로그인이 필요합니다");
+      navigate("/login");
+      return;
+    }
+
+    const isSaved = savedMap[quoteId];
+
+    if (isSaved) {
+      // 저장 취소
+      const { error } = await supabase
+        .from("quote_likes")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("quote_id", quoteId);
+
+      if (error) {
+        console.error("저장 취소 실패", error);
+        return;
+      }
+
+      setSavedMap((prev) => ({ ...prev, [quoteId]: false }));
+      showToastMessage("저장이 취소되었습니다");
+    } else {
+      // 저장
+      const { error } = await supabase
+        .from("quote_likes")
+        .insert({
+          user_id: user.id,
+          quote_id: quoteId,
+        });
+
+      if (error) {
+        console.error("저장 실패", error);
+        return;
+      }
+
+      setSavedMap((prev) => ({ ...prev, [quoteId]: true }));
+      showToastMessage("문장이 저장되었습니다");
+    }
   };
 
   const carouselRef = useRef(null);
@@ -680,7 +743,7 @@ export default function Home() {
                   <h2 className="section-title-2">이달의 활동 랭킹</h2>
                 </div>
                 <p className="section-sub-2">
-                  완독 수와 공감 활동을 바탕으로 한 종합 랭킹이에요.
+                  완독 수와 공감 활동을 바탕으로 한 종합 랭킹이에요
                 </p>
 
                 <div className="ranking-list">
@@ -772,11 +835,11 @@ export default function Home() {
                       {/* 저장 */}
                       <button
                         type="button"
-                        className={`quote-action-item save-btn ${savedMap[idx] ? "saved" : ""}`}
-                        onClick={() => toggleSave(idx)}
+                        className={`quote-action-item save-btn ${savedMap[item.id] ? "saved" : ""}`}
+                        onClick={() => handleQuoteSave(item.id)}
                       >
                         <img
-                          src={savedMap[idx] ? fillSave : blankSave}
+                          src={savedMap[item.id] ? fillSave : blankSave}
                           alt="저장"
                           className="heart-icon"
                         />
@@ -908,8 +971,7 @@ export default function Home() {
                 onChange={(e) => setCommentInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && commentInput.trim()) {
-                    showToastMessage("댓글이 등록되었습니다");
-                    setCommentInput("");
+                    handleCommentSubmit();
                   }
                 }}
               />

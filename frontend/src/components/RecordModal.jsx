@@ -2,7 +2,10 @@ import { useState } from "react";
 import "./../styles/RecordModal.css";
 import supabase from "../lib/supabaseClient";
 
-export default function RecordModal({ book, onClose }) {
+
+
+export default function RecordModal({ book, onClose, onSaved }) {
+
   const [review, setReview] = useState("");
   const [quote, setQuote] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,12 +22,20 @@ export default function RecordModal({ book, onClose }) {
     if (!user) return;
 
     if (review) {
-      await supabase.from("reviews").insert({
-        user_id: user.id,
-        book_id: book.id,
-        content: review,
-      });
-    }
+  const { error } = await supabase.from("reviews").insert({
+    user_id: user.id,
+    book_id: book.id,
+    content: review,
+    rating: 5,        
+    likes_count: 0,   
+  });
+
+  if (error) {
+    console.error("리뷰 저장 실패:", error);
+    alert("리뷰 저장 실패");
+    return;
+  }
+}
 
     if (quote) {
       await supabase.from("quotes").insert({
@@ -35,6 +46,7 @@ export default function RecordModal({ book, onClose }) {
     }
 
     setLoading(false);
+    onSaved?.();
     onClose();
   };
 
