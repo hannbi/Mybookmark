@@ -13,6 +13,7 @@ import blankHeart from "../assets/blankheart.png";
 import fillHeart from "../assets/fillheart.png";
 import blankSave from "../assets/blanksave.png";
 import fillSave from "../assets/fillsave.png";
+import binIcon from "../assets/bin.png";
 
 import supabase from "../lib/supabaseClient";
 import RecordModal from "../components/RecordModal";
@@ -41,6 +42,15 @@ export default function MyLibrary() {
     const [myComments, setMyComments] = useState([]);
     const [myReviews, setMyReviews] = useState([]);
     const [myQuotes, setMyQuotes] = useState([]);
+
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
+
+    const showToastMessage = (message) => {
+        setToastMessage(message);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 2000);
+    };
 
     /* 내가 작성한 리뷰 불러오기 */
     const fetchMyReviews = async (userId) => {
@@ -90,16 +100,16 @@ export default function MyLibrary() {
 
         const fetchSavedQuotes = async () => {
             const { data, error } = await supabase
-                .from("quote_likes")
+                .from("quote_saves")
                 .select(`
-        quote_id,
-        quotes (
-          id,
-          content,
-          books ( title, author ),
-          profiles ( nickname )
-        )
-      `)
+                created_at,
+                quotes (
+                    id,
+                    content,
+                    books ( title, author ),
+                    profiles ( nickname )
+                )
+            `)
                 .eq("user_id", user.id)
                 .order("created_at", { ascending: false });
 
@@ -108,14 +118,17 @@ export default function MyLibrary() {
                 return;
             }
 
+            console.log("불러온 데이터:", data); // 디버깅용
+
             const formatted = data.map(row => ({
                 id: row.quotes.id,
                 quote: row.quotes.content,
-                book: row.quotes.books.title,
-                author: row.quotes.books.author,
-                user: row.quotes.profiles.nickname,
+                book: row.quotes.books?.title || "제목 없음",
+                author: row.quotes.books?.author || "저자 미상",
+                user: row.quotes.profiles?.nickname || "익명",
             }));
 
+            console.log("포맷된 데이터:", formatted); // 디버깅용
             setSavedQuotes(formatted);
         };
 
@@ -130,6 +143,7 @@ export default function MyLibrary() {
             const { data, error } = await supabase
                 .from("quote_comments")
                 .select(`
+        id,
         content,
         created_at,
         quotes (
@@ -145,7 +159,7 @@ export default function MyLibrary() {
                 return;
             }
 
-            setMyComments(data);
+            setMyComments(data || []);
         };
 
         fetchMyComments();
@@ -209,6 +223,104 @@ export default function MyLibrary() {
 
         setMyBooks(prev => prev.filter(b => b.id !== bookId));
     };
+
+
+    /* 저장 취소 */
+    const handleUnsaveQuote = async (quoteId) => {
+        if (!user) return;
+
+        const { error } = await supabase
+            .from("quote_saves")
+            .delete()
+            .eq("user_id", user.id)
+            .eq("quote_id", quoteId);
+
+        if (error) {
+            console.error("저장 취소 실패", error);
+            return;
+        }
+
+        setSavedQuotes(prev => prev.filter(q => q.id !== quoteId));
+        showToastMessage("저장이 취소되었습니다");
+    };
+
+
+    /* 내가 작성한 문장 삭제 */
+    const handleDeleteMyQuote = async (quoteId) => {
+        if (!user) return;
+
+        const { error } = await supabase
+            .from("quotes")
+            .delete()
+            .eq("id", quoteId)
+            .eq("user_id", user.id);
+
+        if (error) {
+            console.error("문장 삭제 실패", error);
+            return;
+        }
+
+        setMyQuotes(prev => prev.filter(q => q.id !== quoteId));
+        showToastMessage("문장이 삭제되었습니다");
+    };
+
+    /* 내가 작성한 댓글 삭제 */
+    const handleDeleteMyComment = async (commentId) => {
+        if (!user) return;
+
+        const { error } = await supabase
+            .from("quote_comments")
+            .delete()
+            .eq("id", commentId)
+            .eq("user_id", user.id);
+
+        if (error) {
+            console.error("댓글 삭제 실패", error);
+            return;
+        }
+
+        // myComments 다시 불러오기 (id가 없어서)
+        const { data } = await supabase
+            .from("quote_comments")
+            .select(`
+      id,
+      content,
+      created_at,
+      quotes (
+        content,
+        books ( title, author )
+      )
+    `)
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false });
+
+        setMyComments(data || []);
+        showToastMessage("댓글이 삭제되었습니다");
+    };
+
+    /* 내가 작성한 리뷰 삭제 */
+    const handleDeleteMyReview = async (reviewId) => {
+        if (!user) return;
+
+        const { error } = await supabase
+            .from("reviews")
+            .delete()
+            .eq("id", reviewId)
+            .eq("user_id", user.id);
+
+        if (error) {
+            console.error("리뷰 삭제 실패", error);
+            return;
+        }
+
+        setMyReviews(prev => prev.filter(r => r.id !== reviewId));
+        showToastMessage("리뷰가 삭제되었습니다");
+    };
+
+
+
+
+
 
     // 월별 독서량 데이터 (최근 6개월)
     const monthlyReadingData = [
@@ -733,56 +845,43 @@ export default function MyLibrary() {
                         </div>
 
                         <div className="saved-quotes-grid">
-                            {savedQuotes.map((item) => {
-                                const isLiked = !!likedMap[item.id];
-
-                                return (
-                                    <div key={item.id} className="card quote-card-saved">
-                                        <div className="quote-top">
-                                            <span className="quote-writer">{item.user} 님</span>
-                                        </div>
-
-                                        <p className="quote-text">"{item.quote}"</p>
-
-                                        <div className="quote-book">
-                                            <span className="quote-book-title">{item.book}</span>
-                                            <span className="quote-book-author">| {item.author}</span>
-                                        </div>
-
-                                        <div className="quote-actions">
-                                            <button
-                                                type="button"
-                                                className="quote-action-item"
-                                                onClick={() => {
-                                                    setActiveQuote(item);
-                                                    setShowCommentModal(true);
-                                                }}
-                                            ></button>
-
-                                            <button
-                                                type="button"
-                                                className={`quote-action-item like-btn ${isLiked ? "liked" : ""}`}
-                                                onClick={() => toggleLike(item.id)}
-                                            >
-                                                <img
-                                                    src={isLiked ? fillHeart : blankHeart}
-                                                    alt="공감"
-                                                    className="heart-icon"
-                                                />
-                                                <span>{item.likes + (isLiked ? 1 : 0)}</span>
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                className="quote-action-item save-btn saved"
-                                            >
-                                                <img src={fillSave} alt="저장됨" className="heart-icon" />
-                                                <span>저장됨</span>
-                                            </button>
-                                        </div>
+                            {savedQuotes.map((item) => (
+                                <div key={item.id} className="card quote-card-saved">
+                                    <div className="quote-top">
+                                        <span className="quote-writer">{item.user} 님</span>
                                     </div>
-                                );
-                            })}
+
+                                    <p className="quote-text">"{item.quote}"</p>
+
+                                    <div className="quote-book">
+                                        <span className="quote-book-title">{item.book}</span>
+                                        <span className="quote-book-author">| {item.author}</span>
+                                    </div>
+
+                                    <div className="quote-actions">
+                                        <button
+                                            type="button"
+                                            className="quote-action-item"
+                                            onClick={() => {
+                                                setActiveQuote(item);
+                                                setShowCommentModal(true);
+                                            }}
+                                        >
+                                            <img src={commentIcon} alt="댓글" className="meta-icon" />
+                                            <span>댓글</span>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            className="quote-action-item save-btn"
+                                            onClick={() => handleUnsaveQuote(item.id)}
+                                        >
+                                            <img src={fillSave} alt="저장됨" className="heart-icon" />
+                                            <span>저장됨</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </section>
@@ -798,16 +897,31 @@ export default function MyLibrary() {
                         <div className="saved-quotes-grid">
                             {myQuotes.map((q) => (
                                 <div key={q.id} className="card quote-card-saved">
-                                    <p className="quote-text">“{q.content}”</p>
+
+                                    <p className="quote-text">"{q.content}"</p>
 
                                     <div className="quote-book">
-                                        <span>{q.books?.title}</span>
-                                        <span> | {q.books?.author}</span>
+                                        <span className="quote-book-title">{q.books?.title}</span>
+                                        <span className="quote-book-author"> | {q.books?.author}</span>
                                     </div>
 
                                     <div className="quote-actions">
-                                        <span>❤️ {q.quote_likes.length}</span>
-                                        <span>💬 {q.quote_comments.length}</span>
+                                        <button className="quote-action-item">
+                                            <img src={commentIcon} className="meta-icon" />
+                                            <span>{q.quote_comments.length}</span>
+                                        </button>
+
+                                        <button className="quote-action-item">
+                                            <img src={fillHeart} className="heart-icon" />
+                                            <span>{q.quote_likes.length}</span>
+                                        </button>
+
+                                        <button
+                                            className="quote-action-item delete"
+                                            onClick={() => handleDeleteMyQuote(q.id)}
+                                        >
+                                            <img src={binIcon} className="meta-icon" />
+                                        </button>
                                     </div>
                                 </div>
                             ))}
@@ -824,8 +938,9 @@ export default function MyLibrary() {
                         </div>
 
                         <div className="saved-quotes-grid">
-                            {myComments.map((item, idx) => (
-                                <div key={idx} className="card quote-card-saved">
+                            {myComments.map((item) => (
+                                <div key={item.id} className="card quote-card-saved">
+
                                     <p className="quote-text">"{item.content}"</p>
 
                                     <div className="quote-book">
@@ -835,6 +950,13 @@ export default function MyLibrary() {
                                         <span className="quote-book-author">
                                             | {item.quotes.books.author}
                                         </span>
+
+                                        <button
+                                            className="quote-action-item delete"
+                                            onClick={() => handleDeleteMyComment(item.id)}
+                                        >
+                                            <img src={binIcon} className="meta-icon" />
+                                        </button>
                                     </div>
                                 </div>
                             ))}
@@ -855,25 +977,34 @@ export default function MyLibrary() {
                         <div className="saved-quotes-grid">
                             {myReviews.map((r) => (
                                 <div key={r.id} className="card quote-card-saved">
+
                                     <p className="quote-text">{r.content}</p>
 
                                     <div className="quote-book">
-                                        <span>{r.books?.title}</span>
-                                        <span> | {r.books?.author}</span>
+                                        <span className="quote-book-title">{r.books?.title}</span>
+                                        <span className="quote-book-author"> | {r.books?.author}</span>
                                     </div>
 
                                     <div className="quote-actions">
-                                        <span>❤️ {r.likes_count}</span>
+                                        <button type="button" className="quote-action-item">
+                                            <img src={fillHeart} alt="좋아요" className="heart-icon" />
+                                            <span>{r.likes_count || 0}</span>
+                                        </button>
+
+                                         <button
+                                            className="quote-action-item delete"
+                                            onClick={() => handleDeleteMyReview(r.id)}
+                                        >
+                                            <img src={binIcon} className="meta-icon" />
+                                        </button>
                                     </div>
+
+                                    
                                 </div>
                             ))}
                         </div>
                     </div>
                 </section>
-
-
-
-
 
 
             </main>
@@ -917,6 +1048,11 @@ export default function MyLibrary() {
                     </div>
                 )
             }
+            {showToast && (
+                <div className="toast-notification">
+                    ✓ {toastMessage}
+                </div>
+            )}
 
             {/* ===== FOOTER ===== */}
             <footer className="mylibrary-footer">

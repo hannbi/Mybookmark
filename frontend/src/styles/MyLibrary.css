@@ -419,6 +419,7 @@
     font-size: 13px;
     color: #7b6f64;
 }
+
 /* ===== 기록하기 버튼 ===== */
 .record-btn {
     all: unset;
@@ -443,6 +444,7 @@
     border-color: #D65E18;
     background: #fff4ec;
 }
+
 /* ===== 통계 그리드 ===== */
 .stats-grid {
     display: grid;
@@ -669,11 +671,11 @@
 
 /* ===== 파이 차트 ===== */
 .pie-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;   
-  gap: 48px;
-  margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 48px;
+    margin-top: 20px;
 }
 
 .pie-chart-wrap {
@@ -746,6 +748,7 @@
 }
 
 .quote-card-saved {
+    position: relative;
     background: #ffffff;
     border-radius: 14px;
     padding: 16px 16px 8px;
@@ -834,6 +837,22 @@
 .quote-action-item:active {
     outline: none;
     box-shadow: none;
+}
+
+.quote-action-item.delete {
+    opacity: 0.6;
+}
+
+.quote-action-item.delete:hover {
+    opacity: 1;
+    transform: scale(1.05);
+    color: #c0392b;
+}
+
+.quote-action-item.delete img {
+    width: 18px;
+    height: 18px;
+    opacity: 0.6;
 }
 
 .meta-icon,
@@ -966,6 +985,57 @@
     .saved-quotes-grid {
         grid-template-columns: 1fr;
         gap: 16px;
+    }
+
+    /* 삭제 버튼 (휴지통) */
+    
+    .delete-btn:hover {
+        transform: scale(1.1);
+    }
+
+
+    .delete-btn:hover .bin-icon {
+        opacity: 1;
+    }
+
+    /* 토스트 알림 */
+    .toast-notification {
+        position: fixed;
+        bottom: 40px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: white;
+        padding: 14px 24px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 2000;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        animation: toastSlideUp 0.3s ease, toastFadeOut 0.3s ease 1.7s;
+    }
+
+    @keyframes toastSlideUp {
+        from {
+            bottom: 20px;
+            opacity: 0;
+        }
+
+        to {
+            bottom: 40px;
+            opacity: 1;
+        }
+    }
+
+    @keyframes toastFadeOut {
+        to {
+            opacity: 0;
+        }
+    }
+
+    /* quote-card-saved를 relative로 */
+    .quote-card-saved {
+        position: relative;
     }
 
 }
