@@ -30,10 +30,49 @@ export default function Home() {
   const [activeQuote, setActiveQuote] = useState(null);
   const [commentInput, setCommentInput] = useState("");
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
-  const showToastMessage = () => {
+  const showToastMessage = (message) => {
+    setToastMessage(message);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
+  };
+  const saveToLibrary = async (status, bookId) => {
+    if (!user) {
+      alert("로그인이 필요합니다");
+      navigate("/login");
+      return;
+    }
+
+    const payload = {
+      user_id: user.id,
+      book_id: bookId,
+      status,
+    };
+
+    if (status === "reading") {
+      payload.started_at = new Date().toISOString().slice(0, 10);
+    }
+
+    if (status === "done") {
+      const today = new Date().toISOString().slice(0, 10);
+      payload.started_at = today;
+      payload.finished_at = today;
+    }
+
+    const { error } = await supabase
+      .from("user_books")
+      .upsert(payload, {
+        onConflict: "user_id,book_id",
+      });
+
+    if (error) {
+      console.error(error);
+      alert("서재 저장 실패");
+      return;
+    }
+
+    showToastMessage("서재에 추가되었습니다");
   };
 
   useEffect(() => {
@@ -532,7 +571,7 @@ export default function Home() {
                           className="btn-primary"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate("/mylibrary");
+                            saveToLibrary("want", book.id);
                           }}
                         >
                           읽고 싶은 책
@@ -792,7 +831,15 @@ export default function Home() {
 
                     <div className="newbook-buttons">
                       <button className="btn-outline">책 상세보기</button>
-                      <button className="btn-primary">읽고 싶은 책</button>
+                      <button
+                        className="btn-primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          saveToLibrary("want", book.id);
+                        }}
+                      >
+                        읽고 싶은 책
+                      </button>
                     </div>
                   </div>
 
@@ -861,7 +908,7 @@ export default function Home() {
                 onChange={(e) => setCommentInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && commentInput.trim()) {
-                    showToastMessage();
+                    showToastMessage("댓글이 등록되었습니다");
                     setCommentInput("");
                   }
                 }}
@@ -870,7 +917,7 @@ export default function Home() {
                 className="comment-submit-btn"
                 onClick={() => {
                   if (commentInput.trim()) {
-                    showToastMessage();
+                    showToastMessage("댓글이 등록되었습니다");
                     setCommentInput("");
                   }
                 }}
@@ -885,7 +932,7 @@ export default function Home() {
       {/* 토스트 알림 */}
       {showToast && (
         <div className="toast-notification">
-          ✓ 댓글이 등록되었습니다
+          ✓ {toastMessage}
         </div>
       )}
     </div>
