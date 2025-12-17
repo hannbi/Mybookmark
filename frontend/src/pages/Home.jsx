@@ -31,6 +31,7 @@ export default function Home() {
   const [commentInput, setCommentInput] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [quotes, setQuotes] = useState([]);
 
   const showToastMessage = (message) => {
     setToastMessage(message);
@@ -74,6 +75,49 @@ export default function Home() {
 
     showToastMessage("서재에 추가되었습니다");
   };
+
+  useEffect(() => {
+    const fetchTopQuotes = async () => {
+      const { data, error } = await supabase
+        .from("quotes")
+        .select(`
+        id,
+        content,
+        created_at,
+        profiles: user_id ( nickname ),
+        books: book_id ( title, author ),
+        quote_likes ( id ),
+        quote_comments ( id )
+      `);
+
+      if (error) {
+        console.error("문장 불러오기 실패:", error);
+        return;
+      }
+
+      // 좋아요+댓글 수 계산
+      const scored = data.map(q => ({
+        id: q.id,
+        quote: q.content,
+        user: q.profiles?.nickname ?? "익명",
+        book: q.books?.title ?? "",
+        author: q.books?.author ?? "",
+        likes: q.quote_likes.length,
+        comments: q.quote_comments.length,
+        score: q.quote_likes.length + q.quote_comments.length
+      }));
+
+      // 계산된 TOP 8 책 속 한구절
+      const top8 = scored
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 8);
+
+      setQuotes(top8);
+    };
+
+    fetchTopQuotes();
+  }, []);
+
 
   useEffect(() => {
     let mounted = true;
@@ -170,81 +214,6 @@ export default function Home() {
     // 실시간으로 댓글을 추가하려면 dummyComments를 state로 변경하고 여기서 업데이트
   };
 
-  const quoteList = [
-    {
-      id: 1,
-      user: "민수",
-      quote: "책의 깊이와 감동이 오래도록 남습니다.",
-      book: "문장의 온도",
-      author: "이기주",
-      comments: 12,
-      likes: 105,
-    },
-    {
-      id: 2,
-      user: "한비",
-      quote: "내 마음은 언제나 메마른 언덕이었다.",
-      book: "어른의 문장",
-      author: "김소연",
-      comments: 12,
-      likes: 103,
-    },
-    {
-      id: 3,
-      user: "수현",
-      quote: "사람의 마음은 쉽게 무너지지 않지만, 한 번 금이 가면 오래 남는다.",
-      book: "마음의 결",
-      author: "박지은",
-      comments: 8,
-      likes: 97,
-    },
-    {
-      id: 4,
-      user: "수지",
-      quote: "우리는 모두 불완전한 존재지만, 그 안에서 아름다움을 찾을 수 있다.",
-      book: "불완전함의 미학",
-      author: "정혜진",
-      comments: 15,
-      likes: 89,
-    },
-    {
-      id: 5,
-      user: "정수",
-      quote: "시간은 누구에게나 공평하지만, 우리가 그것을 채우는 방식은 다르다.",
-      book: "시간의 무게",
-      author: "최민호",
-      comments: 10,
-      likes: 92,
-    },
-    {
-      id: 6,
-      user: "율이",
-      quote: "진짜 용기란 두려움이 없는 게 아니라, 두려움 속에서도 나아가는 것이다.",
-      book: "용기에 관하여",
-      author: "강서윤",
-      comments: 18,
-      likes: 110,
-    },
-    {
-      id: 7,
-      user: "하늘",
-      quote: "말하지 않아도 알 수 있는 것들이 있다. 그게 바로 마음이다.",
-      book: "침묵의 언어",
-      author: "윤지혜",
-      comments: 9,
-      likes: 84,
-    },
-    {
-      id: 8,
-      user: "지아",
-      quote: "행복은 목적지가 아니라 여행하는 과정 그 자체다.",
-      book: "행복의 순간들",
-      author: "이서연",
-      comments: 14,
-      likes: 95,
-    },
-  ];
-
   const ranking = [
     { rank: 1, name: "한비 님", score: "공감 930회" },
     { rank: 2, name: "민수 님", score: "공감 802회" },
@@ -289,13 +258,6 @@ export default function Home() {
       likes: 31,
       thumbClass: "thumb-purple"
     }
-  ];
-
-  const dummyComments = [
-    { id: 1, user: "책벌레", text: "이 문장 때문에 책을 샀어요. 정말 공감되네요!", time: "2시간 전" },
-    { id: 2, user: "독서왕", text: "저도 이 부분에서 밑줄 그었어요 ㅎㅎ", time: "5시간 전" },
-    { id: 3, user: "민지", text: "다시 읽어보고 싶은 문장이에요", time: "1일 전" },
-    { id: 4, user: "현수", text: "너무 감동적이에요 👍", time: "1일 전" },
   ];
 
   const [selectedReview, setSelectedReview] = useState(0); // 1번째 카드가 기본 선택
@@ -784,69 +746,40 @@ export default function Home() {
 
             {/* 🔹 4개 × 2줄 고정 */}
             <div className="quote-grid-2row">
-              {quoteList.slice(0, 8).map((item, idx) => {
+              {quotes.map((item, idx) => {
                 const isLiked = !!likedMap[idx];
 
                 return (
-                  <div key={idx} className="card quote-card-fixed">
-                    {/* 작성자 */}
+                  <div key={item.id} className="card quote-card-fixed">
                     <div className="quote-top">
                       <span className="quote-writer">{item.user} 님</span>
                     </div>
 
-                    {/* 한 문장 */}
                     <p className="quote-text">“{item.quote}”</p>
 
-                    {/* 책명 / 저자 */}
                     <div className="quote-book">
                       <span className="quote-book-title">{item.book}</span>
                       <span className="quote-book-author">| {item.author}</span>
                     </div>
 
-                    {/* 하단: 댓글 / 공감 / 저장 */}
                     <div className="quote-actions">
-                      {/* 댓글 */}
-                      <button
-                        type="button"
-                        className="quote-action-item"
-                        onClick={() => {
-                          setActiveQuote(item);
-                          setShowCommentModal(true);
-                        }}
-                      >
-                        <img src={commentIcon} alt="댓글" className="meta-icon" />
+                      <button className="quote-action-item">
+                        <img src={commentIcon} className="meta-icon" />
                         <span>{item.comments}</span>
                       </button>
 
-                      {/* 공감 */}
-                      <button
-                        type="button"
-                        className={`quote-action-item like-btn ${isLiked ? "liked" : ""}`}
-                        onClick={() => toggleLike(idx)}
-                      >
-                        <img
-                          src={isLiked ? fillHeart : blankHeart}
-                          alt="공감"
-                          className="heart-icon"
-                        />
-                        <span>{item.likes + (isLiked ? 1 : 0)}</span>
+                      <button className="quote-action-item">
+                        <img src={fillHeart} className="heart-icon" />
+                        <span>{item.likes}</span>
                       </button>
 
-                      {/* 저장 */}
-                      <button
-                        type="button"
-                        className={`quote-action-item save-btn ${savedMap[item.id] ? "saved" : ""}`}
-                        onClick={() => handleQuoteSave(item.id)}
-                      >
-                        <img
-                          src={savedMap[item.id] ? fillSave : blankSave}
-                          alt="저장"
-                          className="heart-icon"
-                        />
+                      <button className="quote-action-item">
+                        <img src={blankSave} className="heart-icon" />
                         <span>저장</span>
                       </button>
                     </div>
                   </div>
+
                 );
               })}
             </div>
