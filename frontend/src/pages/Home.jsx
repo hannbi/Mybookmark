@@ -28,7 +28,13 @@ export default function Home() {
   const [nickname, setNickname] = useState("");
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [activeQuote, setActiveQuote] = useState(null);
+  const [commentInput, setCommentInput] = useState("");
+  const [showToast, setShowToast] = useState(false);
 
+  const showToastMessage = () => {
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2000);
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -217,6 +223,13 @@ export default function Home() {
       likes: 31,
       thumbClass: "thumb-purple"
     }
+  ];
+
+  const dummyComments = [
+    { id: 1, user: "책벌레", text: "이 문장 때문에 책을 샀어요. 정말 공감되네요!", time: "2시간 전" },
+    { id: 2, user: "독서왕", text: "저도 이 부분에서 밑줄 그었어요 ㅎㅎ", time: "5시간 전" },
+    { id: 3, user: "민지", text: "다시 읽어보고 싶은 문장이에요", time: "1일 전" },
+    { id: 4, user: "현수", text: "너무 감동적이에요 👍", time: "1일 전" },
   ];
 
   const [selectedReview, setSelectedReview] = useState(0); // 1번째 카드가 기본 선택
@@ -792,7 +805,7 @@ export default function Home() {
           </div>
         </section>
       </main>
-      
+
 
       {/* ===== FOOTER ===== */}
       <footer className="home-footer">
@@ -804,34 +817,77 @@ export default function Home() {
         </div>
       </footer >
       {showCommentModal && activeQuote && (
-        <div className="modal-backdrop" onClick={() => setShowCommentModal(false)}>
+        <div className="modal-backdrop" onClick={() => {
+          setShowCommentModal(false);
+          setCommentInput("");
+        }}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <h3>댓글</h3>
-
-            {/* 더미 댓글 */}
-            <div className="comment-list">
-              <p>📖 너무 공감돼요!</p>
-              <p>📖 이 문장 때문에 책 샀어요</p>
-              <p>📖 다시 읽어보고 싶네요</p>
+            <div className="modal-header">
+              <h3>댓글 {dummyComments.length}개</h3>
+              <button
+                className="modal-close-btn"
+                onClick={() => {
+                  setShowCommentModal(false);
+                  setCommentInput("");
+                }}
+              >
+                ✕
+              </button>
             </div>
 
-            {/* 입력 */}
-            <input
-              type="text"
-              placeholder="댓글을 입력하세요"
-              className="comment-input"
-            />
+            {/* 댓글 목록 */}
+            <div className="comment-list">
+              {dummyComments.map((comment) => (
+                <div key={comment.id} className="comment-item">
+                  <div className="comment-header">
+                    <div className="comment-user-info">
+                      <div className="comment-avatar">{comment.user[0]}</div>
+                      <span className="comment-username">{comment.user}</span>
+                    </div>
+                    <span className="comment-time">{comment.time}</span>
+                  </div>
+                  <p className="comment-text">{comment.text}</p>
+                </div>
+              ))}
+            </div>
 
-            <div className="modal-actions">
-              <button className="btn-outline" onClick={() => setShowCommentModal(false)}>
-                닫기
+            {/* 댓글 입력 */}
+            <div className="comment-input-section">
+              <input
+                type="text"
+                placeholder="댓글을 입력하세요"
+                className="comment-input"
+                value={commentInput}
+                onChange={(e) => setCommentInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && commentInput.trim()) {
+                    showToastMessage();
+                    setCommentInput("");
+                  }
+                }}
+              />
+              <button
+                className="comment-submit-btn"
+                onClick={() => {
+                  if (commentInput.trim()) {
+                    showToastMessage();
+                    setCommentInput("");
+                  }
+                }}
+              >
+                등록
               </button>
-              <button className="btn-primary">등록</button>
             </div>
           </div>
         </div>
-      )
-      }
+      )}
+
+      {/* 토스트 알림 */}
+      {showToast && (
+        <div className="toast-notification">
+          ✓ 댓글이 등록되었습니다
+        </div>
+      )}
     </div>
   );
 
