@@ -32,7 +32,7 @@ export default function Home() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [quotes, setQuotes] = useState([]);
-  
+
 
   const showToastMessage = (message) => {
     setToastMessage(message);
@@ -85,8 +85,8 @@ export default function Home() {
         id,
         content,
         created_at,
-        profiles: user_id ( nickname ),
-        books: book_id ( title, author ),
+        profiles ( nickname ),
+        books ( title, author ),
         quote_likes ( id ),
         quote_comments ( id )
       `);
@@ -157,7 +157,28 @@ export default function Home() {
     };
   }, []);
 
+  const [comments, setComments] = useState([]);
 
+  useEffect(() => {
+    if (!activeQuote) return;
+
+    const fetchComments = async () => {
+      const { data } = await supabase
+        .from("quote_comments")
+        .select(`
+        id,
+        content,
+        created_at,
+        profiles ( nickname )
+      `)
+        .eq("quote_id", activeQuote.id)
+        .order("created_at");
+
+      setComments(data);
+    };
+
+    fetchComments();
+  }, [activeQuote]);
 
   /* Best Sellers API*/
   const [bestsellers, setBestsellers] = useState([]);
@@ -212,7 +233,20 @@ export default function Home() {
 
     showToastMessage("댓글이 등록되었습니다");
     setCommentInput("");
-    // 실시간으로 댓글을 추가하려면 dummyComments를 state로 변경하고 여기서 업데이트
+
+    // 댓글 목록 실시간 업데이트
+    const { data } = await supabase
+      .from("quote_comments")
+      .select(`
+      id,
+      content,
+      created_at,
+      profiles ( nickname )
+    `)
+      .eq("quote_id", activeQuote.id)
+      .order("created_at");
+
+    setComments(data || []);
   };
 
   const ranking = [
@@ -261,56 +295,89 @@ export default function Home() {
     }
   ];
 
-  const [selectedReview, setSelectedReview] = useState(0); // 1번째 카드가 기본 선택
-  const [likedMap, setLikedMap] = useState({});
-  const [savedMap, setSavedMap] = useState({});
+  const [selectedReview, setSelectedReview] = useState(0);
 
-  const toggleLike = (id) => {
-    setLikedMap((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
-  const handleQuoteSave = async (quoteId) => {
+  const [likedQuoteIds, setLikedQuoteIds] = useState([]);
+  const [savedQuoteIds, setSavedQuoteIds] = useState([]);
+
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchMyQuoteActions = async () => {
+      const { data: likes } = await supabase
+        .from("quote_likes")
+        .select("quote_id")
+        .eq("user_id", user.id);
+
+      const { data: saves } = await supabase
+        .from("quote_saves")
+        .select("quote_id")
+        .eq("user_id", user.id);
+
+      setLikedQuoteIds(likes?.map(l => l.quote_id) ?? []);
+      setSavedQuoteIds(saves?.map(s => s.quote_id) ?? []);
+    };
+
+    fetchMyQuoteActions();
+  }, [user]);
+
+  const handleLikeToggle = async (quoteId) => {
     if (!user) {
       alert("로그인이 필요합니다");
       navigate("/login");
       return;
     }
 
-    const isSaved = savedMap[quoteId];
+    const isLiked = likedQuoteIds.includes(quoteId);
 
-    if (isSaved) {
-      // 저장 취소
-      const { error } = await supabase
+    if (isLiked) {
+      await supabase
         .from("quote_likes")
         .delete()
         .eq("user_id", user.id)
         .eq("quote_id", quoteId);
 
-      if (error) {
-        console.error("저장 취소 실패", error);
-        return;
-      }
-
-      setSavedMap((prev) => ({ ...prev, [quoteId]: false }));
-      showToastMessage("저장이 취소되었습니다");
+      setLikedQuoteIds(prev => prev.filter(id => id !== quoteId));
     } else {
-      // 저장
-      const { error } = await supabase
+      await supabase
         .from("quote_likes")
         .insert({
           user_id: user.id,
           quote_id: quoteId,
         });
 
-      if (error) {
-        console.error("저장 실패", error);
-        return;
-      }
+      setLikedQuoteIds(prev => [...prev, quoteId]);
+    }
+  };
 
-      setSavedMap((prev) => ({ ...prev, [quoteId]: true }));
-      showToastMessage("문장이 저장되었습니다");
+
+  const handleSaveToggle = async (quoteId) => {
+    if (!user) {
+      alert("로그인이 필요합니다");
+      navigate("/login");
+      return;
+    }
+
+    const isSaved = savedQuoteIds.includes(quoteId);
+
+    if (isSaved) {
+      await supabase
+        .from("quote_saves")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("quote_id", quoteId);
+
+      setSavedQuoteIds(prev => prev.filter(id => id !== quoteId));
+    } else {
+      await supabase
+        .from("quote_saves")
+        .insert({
+          user_id: user.id,
+          quote_id: quoteId,
+        });
+
+      setSavedQuoteIds(prev => [...prev, quoteId]);
     }
   };
 
@@ -748,7 +815,8 @@ export default function Home() {
             {/* 🔹 4개 × 2줄 고정 */}
             <div className="quote-grid-2row">
               {quotes.map((item, idx) => {
-                const isLiked = !!likedMap[idx];
+                const isLiked = likedQuoteIds.includes(item.id);
+                const isSaved = savedQuoteIds.includes(item.id);
 
                 return (
                   <div key={item.id} className="card quote-card-fixed">
@@ -764,18 +832,38 @@ export default function Home() {
                     </div>
 
                     <div className="quote-actions">
-                      <button className="quote-action-item">
+                      <button
+                        className="quote-action-item"
+                        onClick={() => {
+                          setActiveQuote(item);
+                          setShowCommentModal(true);
+                        }}
+                      >
                         <img src={commentIcon} className="meta-icon" />
                         <span>{item.comments}</span>
                       </button>
 
-                      <button className="quote-action-item">
-                        <img src={fillHeart} className="heart-icon" />
-                        <span>{item.likes}</span>
+                      <button
+                        className={`quote-action-item ${isLiked ? "liked" : ""}`}
+                        onClick={() => handleLikeToggle(item.id)}
+                      >
+                        <img
+                          src={isLiked ? fillHeart : blankHeart}
+                          className="heart-icon"
+                        />
+                        <span>
+                          {item.likes + (isLiked ? 1 : 0)}
+                        </span>
                       </button>
 
-                      <button className="quote-action-item">
-                        <img src={blankSave} className="heart-icon" />
+                      <button
+                        className={`quote-action-item ${isSaved ? "saved" : ""}`}
+                        onClick={() => handleSaveToggle(item.id)}
+                      >
+                        <img
+                          src={isSaved ? fillSave : blankSave}
+                          className="heart-icon"
+                        />
                         <span>저장</span>
                       </button>
                     </div>
@@ -867,7 +955,7 @@ export default function Home() {
         }}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>댓글 {dummyComments.length}개</h3>
+              <h3>댓글 {comments.length}개</h3>
               <button
                 className="modal-close-btn"
                 onClick={() => {
@@ -881,16 +969,22 @@ export default function Home() {
 
             {/* 댓글 목록 */}
             <div className="comment-list">
-              {dummyComments.map((comment) => (
+              {comments.map((comment) => (
                 <div key={comment.id} className="comment-item">
                   <div className="comment-header">
                     <div className="comment-user-info">
-                      <div className="comment-avatar">{comment.user[0]}</div>
-                      <span className="comment-username">{comment.user}</span>
+                      <div className="comment-avatar">
+                        {comment.profiles?.nickname?.[0] ?? "?"}
+                      </div>
+                      <span className="comment-username">
+                        {comment.profiles?.nickname ?? "익명"}
+                      </span>
                     </div>
-                    <span className="comment-time">{comment.time}</span>
+                    <span className="comment-time">
+                      {new Date(comment.created_at).toLocaleDateString()}
+                    </span>
                   </div>
-                  <p className="comment-text">{comment.text}</p>
+                  <p className="comment-text">{comment.content}</p>
                 </div>
               ))}
             </div>
@@ -913,8 +1007,7 @@ export default function Home() {
                 className="comment-submit-btn"
                 onClick={() => {
                   if (commentInput.trim()) {
-                    showToastMessage("댓글이 등록되었습니다");
-                    setCommentInput("");
+                    handleCommentSubmit();
                   }
                 }}
               >
