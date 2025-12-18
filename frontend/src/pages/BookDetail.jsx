@@ -34,6 +34,57 @@ export default function BookDetail() {
     const [quoteLike, setQuoteLike] = useState({});
     const [quoteSave, setQuoteSave] = useState({});
 
+    const [reviews, setReviews] = useState([]);
+    const [quotes, setQuotes] = useState([]);
+
+    /* 해당 책의 리뷰 */
+    useEffect(() => {
+        if (!book) return;
+
+        const fetchReviews = async () => {
+            const { data, error } = await supabase
+                .from("reviews")
+                .select(`
+        id,
+        content,
+        created_at,
+        profiles ( nickname ),
+        review_likes ( id, type )
+      `)
+                .eq("book_id", book.id)
+                .order("created_at", { ascending: false });
+
+            if (!error) setReviews(data);
+        };
+
+        fetchReviews();
+    }, [book]);
+
+    /* 해당 책의 한문장 */
+    useEffect(() => {
+        if (!book) return;
+
+        const fetchQuotes = async () => {
+            const { data, error } = await supabase
+                .from("quotes")
+                .select(`
+        id,
+        content,
+        created_at,
+        profiles ( nickname ),
+        quote_likes ( id ),
+        quote_comments ( id ),
+        quote_saves ( id )
+      `)
+                .eq("book_id", book.id)
+                .order("created_at", { ascending: false });
+
+            if (!error) setQuotes(data);
+        };
+
+        fetchQuotes();
+    }, [book]);
+
 
     useEffect(() => {
         if (!bookId) {
@@ -107,7 +158,7 @@ export default function BookDetail() {
     if (!book) {
         return <div className="detail-empty">책 정보가 없습니다.</div>;
     }
-    
+
     const saveToLibrary = async (status) => {
         if (!user) {
             alert("로그인이 필요합니다");
@@ -146,56 +197,6 @@ export default function BookDetail() {
         navigate("/mylibrary");
     };
 
-
-    // 더미 리뷰 데이터
-    const reviewList = [
-        {
-            id: 1,
-            user: "한비",
-            text: "문장이 너무 좋아서 밑줄을 멈출 수 없었다.",
-            like: 12,
-            dislike: 2,
-        },
-        {
-            id: 2,
-            user: "민수",
-            text: "조용하지만 오래 남는 책이다.",
-            like: 8,
-            dislike: 1,
-        },
-        {
-            id: 3,
-            user: "민지",
-            text: "조용하지만 오래 남는 책이다.",
-            like: 8,
-            dislike: 1,
-        },
-    ];
-
-    // 책 속 한 구절 (더미)
-    const quoteList = [
-        {
-            id: 1,
-            user: "수현",
-            text: "사람은 누구나 자기만의 속도로 살아간다.",
-            comments: 4,
-            likes: 21,
-        },
-        {
-            id: 2,
-            user: "지아",
-            text: "이 문장 하나로 오늘 하루가 버텨졌다.",
-            comments: 2,
-            likes: 15,
-        },
-        {
-            id: 3,
-            user: "지",
-            text: "이 문장 하나로 오늘 하루가 버텨졌다.",
-            comments: 2,
-            likes: 15,
-        },
-    ];
 
 
     return (
@@ -329,41 +330,31 @@ export default function BookDetail() {
                         <h2 className="detail-section-title">이 책의 리뷰</h2>
 
                         <div className="detail-card-grid">
-                            {reviewList.map((r) => (
+                            {reviews.map((r) => (
                                 <div key={r.id} className="detail-card">
-                                    <span className="detail-user">{r.user} 님</span>
+                                    <span className="detail-user">
+                                        {r.profiles?.nickname || "익명"} 님
+                                    </span>
 
-                                    <p className="detail-text">“{r.text}”</p>
+                                    <p className="detail-text">“{r.content}”</p>
 
                                     <div className="detail-divider" />
 
                                     <div className="detail-actions">
-                                        {/* 👍 */}
-                                        <button
-                                            className="icon-btn"
-                                            onClick={() =>
-                                                setReviewLike((p) => ({ ...p, [r.id]: !p[r.id] }))
-                                            }
-                                        >
-                                            <img
-                                                src={reviewLike[r.id] ? fillGood : blankGood}
-                                                alt="like"
-                                            />
-                                            <span>{r.like + (reviewLike[r.id] ? 1 : 0)}</span>
+                                        {/* 👍 좋아요 */}
+                                        <button className="icon-btn">
+                                            <img src={blankGood} alt="like" />
+                                            <span>
+                                                {r.review_likes?.filter(l => l.type === "like").length || 0}
+                                            </span>
                                         </button>
 
-                                        {/* 👎 */}
-                                        <button
-                                            className="icon-btn"
-                                            onClick={() =>
-                                                setReviewDislike((p) => ({ ...p, [r.id]: !p[r.id] }))
-                                            }
-                                        >
-                                            <img
-                                                src={reviewDislike[r.id] ? fillBad : blankBad}
-                                                alt="dislike"
-                                            />
-                                            <span>{r.dislike + (reviewDislike[r.id] ? 1 : 0)}</span>
+                                        {/* 👎 싫어요 */}
+                                        <button className="icon-btn">
+                                            <img src={blankBad} alt="dislike" />
+                                            <span>
+                                                {r.review_likes?.filter(l => l.type === "dislike").length || 0}
+                                            </span>
                                         </button>
                                     </div>
                                 </div>
@@ -379,46 +370,38 @@ export default function BookDetail() {
                         <h2 className="detail-section-title">책 속 한 구절</h2>
 
                         <div className="detail-card-grid">
-                            {quoteList.map((q) => (
+                            {quotes.map((q) => (
                                 <div key={q.id} className="detail-card">
-                                    <span className="detail-user">{q.user} 님</span>
+                                    <span className="detail-user">
+                                        {q.profiles?.nickname || "익명"} 님
+                                    </span>
 
-                                    <p className="detail-text">“{q.text}”</p>
+                                    <p className="detail-text">“{q.content}”</p>
 
                                     <div className="detail-divider" />
 
                                     <div className="detail-actions">
                                         {/* 댓글 */}
-                                        <div className="icon-btn">
-                                            <img src={commentIcon} alt="comment" />
-                                            <span>{q.comments}</span>
-                                        </div>
-
-                                        {/* 공감 */}
                                         <button
                                             className="icon-btn"
-                                            onClick={() =>
-                                                setQuoteLike((p) => ({ ...p, [q.id]: !p[q.id] }))
-                                            }
+                                            onClick={() => {
+                                                setActiveQuote(q);
+                                                setShowCommentModal(true);
+                                            }}
                                         >
-                                            <img
-                                                src={quoteLike[q.id] ? fillHeart : blankHeart}
-                                                alt="heart"
-                                            />
-                                            <span>{q.likes + (quoteLike[q.id] ? 1 : 0)}</span>
+                                            <img src={commentIcon} alt="comment" />
+                                            <span>{q.quote_comments?.length || 0}</span>
+                                        </button>
+
+                                        {/* 좋아요 */}
+                                        <button className="icon-btn">
+                                            <img src={blankHeart} alt="heart" />
+                                            <span>{q.quote_likes?.length || 0}</span>
                                         </button>
 
                                         {/* 저장 */}
-                                        <button
-                                            className="icon-btn"
-                                            onClick={() =>
-                                                setQuoteSave((p) => ({ ...p, [q.id]: !p[q.id] }))
-                                            }
-                                        >
-                                            <img
-                                                src={quoteSave[q.id] ? fillSave : blankSave}
-                                                alt="save"
-                                            />
+                                        <button className="icon-btn">
+                                            <img src={blankSave} alt="save" />
                                             <span>저장</span>
                                         </button>
                                     </div>
