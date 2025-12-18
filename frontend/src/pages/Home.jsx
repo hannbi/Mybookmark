@@ -795,9 +795,9 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="rank-more-btn">
+            {/* <div className="rank-more-btn">
               랭킹 더보기
-            </div>
+            </div> */}
           </div>
         </section>
 
@@ -874,7 +874,7 @@ export default function Home() {
             </div>
 
             {/* 더보기 */}
-            <div className="quote-more-btn">문장 더보기</div>
+            {/* <div className="quote-more-btn">문장 더보기</div> */}
           </div>
         </section>
 
@@ -931,7 +931,7 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            <div className="quote-more-btn">더 많은 신간 보기</div>
+            {/* <div className="quote-more-btn">더 많은 신간 보기</div> */}
 
 
           </div>

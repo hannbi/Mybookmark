@@ -23,6 +23,15 @@ export default function BookDetail() {
     const navigate = useNavigate();
     const bookId = state?.bookId;
 
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
+
+    const showToastMessage = (message) => {
+        setToastMessage(message);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 2000);
+    };
+
     const [book, setBook] = useState(null);
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
@@ -36,6 +45,90 @@ export default function BookDetail() {
 
     const [reviews, setReviews] = useState([]);
     const [quotes, setQuotes] = useState([]);
+
+
+    const [showCommentModal, setShowCommentModal] = useState(false);
+    const [activeQuote, setActiveQuote] = useState(null);
+    const [commentInput, setCommentInput] = useState("");
+    const isQuoteLiked = (quote) =>
+        quote.quote_likes?.some(l => l.user_id === user?.id);
+
+    const isQuoteSaved = (quote) =>
+        quote.quote_saves?.some(s => s.user_id === user?.id);
+    const toggleQuoteSave = async (quote) => {
+        if (!user) {
+            alert("로그인이 필요합니다");
+            return;
+        }
+
+        const saved = isQuoteSaved(quote);
+
+        if (saved) {
+            await supabase
+                .from("quote_saves")
+                .delete()
+                .eq("user_id", user.id)
+                .eq("quote_id", quote.id);
+        } else {
+            await supabase
+                .from("quote_saves")
+                .insert({
+                    user_id: user.id,
+                    quote_id: quote.id,
+                });
+        }
+
+        setQuotes(prev =>
+            prev.map(q =>
+                q.id === quote.id
+                    ? {
+                        ...q,
+                        quote_saves: saved
+                            ? q.quote_saves.filter(s => s.user_id !== user.id)
+                            : [...q.quote_saves, { user_id: user.id }],
+                    }
+                    : q
+            )
+        );
+    };
+
+    const toggleQuoteLike = async (quote) => {
+        if (!user) {
+            alert("로그인이 필요합니다");
+            return;
+        }
+
+        const liked = isQuoteLiked(quote);
+
+        if (liked) {
+            await supabase
+                .from("quote_likes")
+                .delete()
+                .eq("user_id", user.id)
+                .eq("quote_id", quote.id);
+        } else {
+            await supabase
+                .from("quote_likes")
+                .insert({
+                    user_id: user.id,
+                    quote_id: quote.id,
+                });
+        }
+
+        // UI 즉시 반영
+        setQuotes(prev =>
+            prev.map(q =>
+                q.id === quote.id
+                    ? {
+                        ...q,
+                        quote_likes: liked
+                            ? q.quote_likes.filter(l => l.user_id !== user.id)
+                            : [...q.quote_likes, { user_id: user.id }],
+                    }
+                    : q
+            )
+        );
+    };
 
     /* 해당 책의 리뷰 */
     useEffect(() => {
@@ -84,6 +177,38 @@ export default function BookDetail() {
 
         fetchQuotes();
     }, [book]);
+
+    /* 댓글 저장 함수*/
+    const handleCommentSubmit = async () => {
+        if (!user || !activeQuote || !commentInput.trim()) return;
+
+        const { error } = await supabase
+            .from("quote_comments")
+            .insert({
+                user_id: user.id,
+                quote_id: activeQuote.id,
+                content: commentInput.trim(),
+            });
+
+        if (error) {
+            console.error("댓글 저장 실패", error);
+            return;
+        }
+
+        // 댓글 수 즉시 반영
+        setQuotes(prev =>
+            prev.map(q =>
+                q.id === activeQuote.id
+                    ? { ...q, quote_comments: [...q.quote_comments, { id: Date.now() }] }
+                    : q
+            )
+        );
+
+        setCommentInput("");
+        setShowCommentModal(false);
+    };
+
+
 
 
     useEffect(() => {
@@ -196,7 +321,14 @@ export default function BookDetail() {
 
         navigate("/mylibrary");
     };
-
+    
+    {
+        showToast && (
+            <div className="toast-notification">
+                ✓ {toastMessage}
+            </div>
+        )
+    }
 
 
     return (
@@ -394,14 +526,28 @@ export default function BookDetail() {
                                         </button>
 
                                         {/* 좋아요 */}
-                                        <button className="icon-btn">
-                                            <img src={blankHeart} alt="heart" />
+                                        <button
+                                            className="icon-btn"
+                                            onClick={() => toggleQuoteLike(q)}
+                                        >
+                                            <img
+                                                src={isQuoteLiked(q) ? fillHeart : blankHeart}
+                                                alt="heart"
+                                            />
                                             <span>{q.quote_likes?.length || 0}</span>
+
                                         </button>
 
+
                                         {/* 저장 */}
-                                        <button className="icon-btn">
-                                            <img src={blankSave} alt="save" />
+                                        <button
+                                            className="icon-btn"
+                                            onClick={() => toggleQuoteSave(q)}
+                                        >
+                                            <img
+                                                src={isQuoteSaved(q) ? fillSave : blankSave}
+                                                alt="save"
+                                            />
                                             <span>저장</span>
                                         </button>
                                     </div>
@@ -413,6 +559,32 @@ export default function BookDetail() {
                     </div>
                 </section>
             </main>
+
+            {showCommentModal && activeQuote && (
+                <div className="modal-backdrop" onClick={() => setShowCommentModal(false)}>
+                    <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>댓글 작성</h3>
+                            <button onClick={() => setShowCommentModal(false)}>✕</button>
+                        </div>
+
+                        <input
+                            type="text"
+                            placeholder="댓글을 입력하세요"
+                            value={commentInput}
+                            onChange={(e) => setCommentInput(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") handleCommentSubmit();
+                            }}
+                            className="comment-input"
+                        />
+
+                        <button className="comment-submit-btn" onClick={handleCommentSubmit}>
+                            등록
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
